@@ -75,8 +75,11 @@ public class PantallaInicio extends JFrame {
     private void inicializarEventos() {
         btnJugar.addActionListener(e -> System.out.println("Iniciar nueva partida..."));
         
-        btnCargar.addActionListener(e -> System.out.println("Cargar partida guardada..."));
-        
+        btnCargar.addActionListener(e -> {
+            PantallaGuardado pantallaCargar = new PantallaGuardado(false); 
+            pantallaCargar.setVisible(true);
+            this.dispose(); 
+        });        
         btnSalir.addActionListener(e -> System.exit(0));
     }
 
