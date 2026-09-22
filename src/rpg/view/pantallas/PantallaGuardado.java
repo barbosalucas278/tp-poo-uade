@@ -1,8 +1,9 @@
 package rpg.view.pantallas;
 
 import rpg.controller.GestorPartida;
+import rpg.view.componentes.BotonRPG;
+import rpg.view.componentes.PanelConFondo;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -12,15 +13,10 @@ import javax.swing.SwingConstants;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.io.File;
-import java.net.URL;
 
 public class PantallaGuardado extends JFrame {
 
@@ -34,14 +30,14 @@ public class PantallaGuardado extends JFrame {
         this.esModoGuardar = esModoGuardar;
 
         // 1. Configuración básica de la ventana
-        String modoTexto = esModoGuardar ? "Guardar Partida" : "Cargar Partida";
+        String modoTexto = esModoGuardar ? "GUARDAR PARTIDA" : "CARGAR PARTIDA";
         setTitle("RPG por Turnos - " + modoTexto);
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        // 2. Panel con la imagen de fondo de UI
+        // 2. Panel con la imagen de fondo utilizando el componente reutilizable
         JPanel panelMenu = new PanelConFondo("fondo_guardado.jpg");
         panelMenu.setLayout(new GridBagLayout());
 
@@ -50,7 +46,7 @@ public class PantallaGuardado extends JFrame {
         gbc.gridx = 0;
 
         // 3. Título superior
-        JLabel lblTitulo = new JLabel(modoTexto.toUpperCase());
+        JLabel lblTitulo = new JLabel(modoTexto);
         lblTitulo.setFont(new Font("Georgia", Font.BOLD, 32));
         lblTitulo.setForeground(new Color(212, 175, 55)); // Dorado
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
@@ -61,7 +57,7 @@ public class PantallaGuardado extends JFrame {
         // 4. Dimensiones para los botones de Slot
         Dimension tamanoSlot = new Dimension(350, 50);
 
-        // 5. Instanciar los 3 Slots verificando si existe el archivo
+        // 5. Instanciar los 3 Slots usando el componente BotonRPG
         btnSlot1 = new BotonRPG(obtenerTextoSlot("slot1"));
         btnSlot1.setPreferredSize(tamanoSlot);
         gbc.gridy = 1;
@@ -104,7 +100,6 @@ public class PantallaGuardado extends JFrame {
         btnSlot3.addActionListener(e -> procesarAccionSlot("slot3"));
 
         btnVolver.addActionListener(e -> {
-            // Abrir el menú principal y cerrar esta pantalla
             PantallaInicio inicio = new PantallaInicio();
             inicio.setVisible(true);
             this.dispose();
@@ -124,7 +119,6 @@ public class PantallaGuardado extends JFrame {
             boolean exito = GestorPartida.getInstance().cargarPartidaExistente(slot);
             if (exito) {
                 JOptionPane.showMessageDialog(this, "Partida cargada correctamente desde " + slot, "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                // Próximamente: Transición a PantallaBatalla o PantallaMapa
             } else {
                 JOptionPane.showMessageDialog(this, "El slot seleccionado está vacío.", "Atención", JOptionPane.WARNING_MESSAGE);
             }
@@ -135,61 +129,5 @@ public class PantallaGuardado extends JFrame {
         btnSlot1.setText(obtenerTextoSlot("slot1"));
         btnSlot2.setText(obtenerTextoSlot("slot2"));
         btnSlot3.setText(obtenerTextoSlot("slot3"));
-    }
-
-    // =========================================================================
-    // BOTÓN CON ESTILO RPG
-    // =========================================================================
-    private class BotonRPG extends JButton {
-        public BotonRPG(String texto) {
-            super(texto);
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setOpaque(false);
-            setFont(new Font("Georgia", Font.BOLD, 14));
-            setForeground(new Color(230, 230, 230));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            Color colorFondo = getModel().isRollover() ? new Color(50, 40, 30, 230) : new Color(20, 15, 10, 200);
-            Color colorBorde = getModel().isRollover() ? new Color(255, 215, 0) : new Color(160, 120, 40);
-
-            g2.setColor(colorFondo);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-
-            g2.setColor(colorBorde);
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-            g2.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, 11, 11);
-
-            g2.dispose();
-            super.paintComponent(g);
-        }
-    }
-
-    // =========================================================================
-    // PANEL CON FONDO
-    // =========================================================================
-    private class PanelConFondo extends JPanel {
-        private Image imagenFondo;
-
-        public PanelConFondo(String nombreImagen) {
-            URL imgUrl = getClass().getResource("/resources/images/UI/" + nombreImagen);
-            if (imgUrl != null) {
-                this.imagenFondo = new ImageIcon(imgUrl).getImage();
-            }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (imagenFondo != null) {
-                g.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
-            }
-        }
     }
 }
