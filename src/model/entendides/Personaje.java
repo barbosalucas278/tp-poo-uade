@@ -1,4 +1,4 @@
-package rpg.model.entendides;
+package model.entendides;
 
 public abstract class Personaje {
 

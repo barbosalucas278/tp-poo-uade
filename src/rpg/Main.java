@@ -1,7 +1,8 @@
-package rpg.main;
+package rpg;
 
 import javax.swing.SwingUtilities;
-import rpg.view.pantallas.PantallaInicio;
+
+import view.pantallas.PantallaInicio;
 
 public class Main {
     public static void main(String[] args) {

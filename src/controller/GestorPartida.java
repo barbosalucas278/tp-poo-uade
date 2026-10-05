@@ -1,6 +1,6 @@
-package rpg.controller;
+package controller;
 
-import rpg.model.jugador.Jugador;
+import model.jugador.Jugador;
 import rpg.persistence.GestorArchivos;
 
 public class GestorPartida {

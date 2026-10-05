@@ -1,4 +1,4 @@
-package rpg.view.pantallas;
+package view.pantallas;
 
 public class PantallaJuego {
 

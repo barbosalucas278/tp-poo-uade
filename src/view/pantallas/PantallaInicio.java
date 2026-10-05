@@ -1,13 +1,14 @@
-package rpg.view.pantallas;
-
-import rpg.view.componentes.BotonRPG;
-import rpg.view.componentes.PanelConFondo;
+package view.pantallas;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+
+import view.componentes.BotonRPG;
+import view.componentes.PanelConFondo;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;

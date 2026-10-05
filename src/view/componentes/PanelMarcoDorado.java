@@ -1,4 +1,4 @@
-package rpg.view.componentes;
+package view.componentes;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;

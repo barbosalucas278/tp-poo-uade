@@ -1,10 +1,4 @@
-package rpg.view.pantallas;
-
-import rpg.view.componentes.BarraEstadoRPG;
-import rpg.view.componentes.BotonRPG;
-import rpg.view.componentes.CampoTextoRPG;
-import rpg.view.componentes.PanelConFondo;
-import rpg.view.componentes.PanelMarcoDorado;
+package view.pantallas;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -15,6 +9,13 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
+import view.componentes.BarraEstadoRPG;
+import view.componentes.BotonRPG;
+import view.componentes.CampoTextoRPG;
+import view.componentes.PanelConFondo;
+import view.componentes.PanelMarcoDorado;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;

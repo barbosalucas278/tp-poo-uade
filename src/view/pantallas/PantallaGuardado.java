@@ -1,8 +1,8 @@
-package rpg.view.pantallas;
+package view.pantallas;
 
-import rpg.controller.GestorPartida;
-import rpg.view.componentes.BotonRPG;
-import rpg.view.componentes.PanelConFondo;
+import controller.GestorPartida;
+import view.componentes.BotonRPG;
+import view.componentes.PanelConFondo;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
