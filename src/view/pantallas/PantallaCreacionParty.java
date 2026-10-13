@@ -10,6 +10,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import controller.CreacionPartyController;
+import helpers.archivos.ResourcesHelper;
+import model.DTOs.PersonajeDTO;
 import view.componentes.BarraEstadoRPG;
 import view.componentes.BotonRPG;
 import view.componentes.CampoTextoRPG;
@@ -28,8 +31,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.net.URL;
 
-public class PantallaCreacionPersonaje extends JFrame {
-
+public class PantallaCreacionParty extends JFrame {
+    private CreacionPartyController controller;
     private BotonRPG[] btnSlots = new BotonRPG[4];
     private String[] nombresPersonajesSlots = new String[4];
     private int slotSeleccionado = 0;
@@ -51,8 +54,9 @@ public class PantallaCreacionPersonaje extends JFrame {
     private JTextField txtNombre;
     private BotonRPG btnVolver, btnJugar, btnBorrar, btnCrear;
 
-    public PantallaCreacionPersonaje() {
-        setTitle("Chronicles of UADE - Creación de Personaje");
+    public PantallaCreacionParty() {
+        controller = new CreacionPartyController();
+        setTitle("Chronicles of UADE - Creación de Party");
         setSize(980, 640);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -205,11 +209,11 @@ public class PantallaCreacionPersonaje extends JFrame {
 
         btnGuerrero = new BotonRPG("Guerrero");
         btnAsesino = new BotonRPG("Asesino");
-        btnHechicero = new BotonRPG("Mago");
+        btnHechicero = new BotonRPG("Hechicero");
 
         btnGuerrero.addActionListener(e -> seleccionarClase("Guerrero"));
         btnAsesino.addActionListener(e -> seleccionarClase("Asesino"));
-        btnHechicero.addActionListener(e -> seleccionarClase("Maga"));
+        btnHechicero.addActionListener(e -> seleccionarClase("Hechicero"));
 
         panelClase.add(btnGuerrero);
         panelClase.add(btnAsesino);
@@ -227,7 +231,7 @@ public class PantallaCreacionPersonaje extends JFrame {
         this.claseSeleccionada = clase;
         btnGuerrero.setSeleccionado(clase.equals("Guerrero"));
         btnAsesino.setSeleccionado(clase.equals("Asesino"));
-        btnHechicero.setSeleccionado(clase.equals("Maga"));
+        btnHechicero.setSeleccionado(clase.equals("Hechicero"));
         actualizarAvatar();
     }
 
@@ -322,26 +326,16 @@ public class PantallaCreacionPersonaje extends JFrame {
     // LÓGICA DE JUEGO, AVATAR Y CREACIÓN DE SLOTS
     // =========================================================================
     private void actualizarAvatar() {
-        String nombreArchivo = "";
+        String rutaImagen = ResourcesHelper.getRutaImagenPersonaje(claseSeleccionada, generoSeleccionado);
 
-        if (claseSeleccionada.equals("Maga")) {
-            nombreArchivo = generoSeleccionado.equals("Mujer") ? "MagaLesviana.jpeg" : "MagoLesviano.jpeg";
-        } else if (claseSeleccionada.equals("Asesino")) {
-            nombreArchivo = generoSeleccionado.equals("Mujer") ? "AsesinaMujer.jpg" : "AsesinoHombre.jpg";
-        } else { // Guerrero
-            nombreArchivo = generoSeleccionado.equals("Mujer") ? "GuerreroMujer.jpg" : "GuerreroHombre.jpg";
-        }
-
-        String ruta = "/resources/images/personajes/" + nombreArchivo;
-        URL imgUrl = getClass().getResource(ruta);
-
+        URL imgUrl = getClass().getResource(rutaImagen);
         if (imgUrl != null) {
             ImageIcon icon = new ImageIcon(imgUrl);
             imgAvatar = icon.getImage(); // Guardamos la imagen sin escalar previamente
             lblAvatar.setText("");
         } else {
             imgAvatar = null;
-            lblAvatar.setText("[" + nombreArchivo + " No Encontrado]");
+            lblAvatar.setText("[" + rutaImagen + " No Encontrado]");
             lblAvatar.setForeground(Color.RED);
         }
         
@@ -355,11 +349,12 @@ public class PantallaCreacionPersonaje extends JFrame {
             return;
         }
 
-        String claseTexto = claseSeleccionada.equals("Maga") ? "Mago" : claseSeleccionada;
+        String claseTexto = claseSeleccionada.equals("Hechicera") ? "Hechicero" : claseSeleccionada;
         nombresPersonajesSlots[slotSeleccionado] = nombre + " - " + claseTexto;
 
         btnSlots[slotSeleccionado].setText("<html><center>" + nombre + "<br><font color='#D4AF37'>(" + claseTexto + ")</font></center></html>");
 
+        controller.agregarPersonaje(new PersonajeDTO(nombre, claseTexto, ResourcesHelper.getRutaImagenPersonaje(claseSeleccionada, generoSeleccionado)));
         JOptionPane.showMessageDialog(this, "Personaje creado con éxito en el Slot " + (slotSeleccionado + 1), "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -375,6 +370,7 @@ public class PantallaCreacionPersonaje extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
+            controller.removerPersonaje(slotSeleccionado);
             nombresPersonajesSlots[slotSeleccionado] = null;
             btnSlots[slotSeleccionado].setText((slotSeleccionado + 1) + "  [VACÍO]  +");
             JOptionPane.showMessageDialog(this, "Personaje eliminado del Slot " + (slotSeleccionado + 1), "Slot Vacío", JOptionPane.INFORMATION_MESSAGE);
@@ -396,5 +392,6 @@ public class PantallaCreacionPersonaje extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, "¡Comienza la aventura en Chronicles of UADE!", "¡A Jugar!", JOptionPane.INFORMATION_MESSAGE);
+        controller.iniciarJuego();
     }
 }

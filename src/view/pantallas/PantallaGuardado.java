@@ -1,6 +1,5 @@
 package view.pantallas;
 
-import controller.GestorPartida;
 import view.componentes.BotonRPG;
 import view.componentes.PanelConFondo;
 
@@ -10,6 +9,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+
+import model.partidas.GestorPartida;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;

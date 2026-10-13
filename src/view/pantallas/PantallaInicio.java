@@ -71,7 +71,7 @@ public class PantallaInicio extends JFrame {
 
     private void inicializarEventos() {
         btnJugar.addActionListener(e -> {
-            PantallaCreacionPersonaje pantallaCreacion = new PantallaCreacionPersonaje();
+            PantallaCreacionParty pantallaCreacion = new PantallaCreacionParty();
             pantallaCreacion.setVisible(true);
             dispose();
         });
