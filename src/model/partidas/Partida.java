@@ -36,11 +36,15 @@ public class Partida {
         return inventarioGlobal;
     }
 
-    public List<Mapa> getMapas() {
-        return mapas;
-    }
-    public int getNumeroMapa() {
-        return mapas.size();
+    public Mapa getMapaActual() {
+        Mapa mapaActual = null;
+        for (Mapa nivel : mapas) {
+            if (!nivel.isCompletado()) {
+                mapaActual = nivel;
+                break;
+            }
+        }
+        return mapaActual;
     }
 
     public String getNombre() {

@@ -393,5 +393,8 @@ public class PantallaCreacionParty extends JFrame {
 
         JOptionPane.showMessageDialog(this, "¡Comienza la aventura en Chronicles of UADE!", "¡A Jugar!", JOptionPane.INFORMATION_MESSAGE);
         controller.iniciarJuego();
+        PantallaPreBatalla preBatalla = new PantallaPreBatalla();
+        preBatalla.setVisible(true);
+        this.dispose();
     }
 }

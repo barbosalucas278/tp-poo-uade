@@ -58,11 +58,11 @@ public class GestorPartida {
                 }
             }
 
-            Nivel nivel = new Nivel(enemigos);
+            Nivel nivel = new Nivel(numeroNivel, enemigos);
             niveles.add(nivel);
         }
 
-        return new Mapa(niveles);
+        return new Mapa(numeroMapa, niveles);
     }
 
     public void iniciarPartida(String nombrePartida) {

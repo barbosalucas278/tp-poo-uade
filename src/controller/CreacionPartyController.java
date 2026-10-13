@@ -14,7 +14,6 @@ public class CreacionPartyController {
     private List<PersonajeDTO> partyDTO;
 
     public CreacionPartyController() {
-        super();
         gestorPartida = GestorPartida.getInstance();
         this.partyDTO = new ArrayList<>();
     }
@@ -43,6 +42,5 @@ public class CreacionPartyController {
         if(partida != null) {
             gestorPartida.iniciarPartida(partida.getNombre());
         }
-        System.out.println("Partida iniciada con " + party.size() + " personajes. y nombre de partida: " + partida.getNombre());
     }
 }
