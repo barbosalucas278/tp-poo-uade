@@ -2,7 +2,7 @@ package helpers.archivos;
 
 public class ResourcesHelper {
     public static String getRutaImagenPersonaje(String clase, String genero) {
-        if (clase.equals("Maga")) {
+        if (clase.equals("Maga") || clase.equals("Hechicero")) {
             return genero.equals("Mujer") ? "/resources/images/personajes/MagaLesviana.jpeg" : "/resources/images/personajes/MagoLesviano.jpeg";
         } else if (clase.equals("Asesino")) {
             return genero.equals("Mujer") ? "/resources/images/personajes/AsesinaMujer.jpg" : "/resources/images/personajes/AsesinoHombre.jpg";

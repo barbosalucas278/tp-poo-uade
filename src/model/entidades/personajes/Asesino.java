@@ -1,11 +1,16 @@
 package model.entidades.personajes;
 
 public class Asesino extends Personaje {
+    private static final String NOMBRE_RECURSO = "VIGOR";
     private int destreza;
+
+    public int getDestreza() {
+        return destreza;
+    }
 
     public Asesino(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
             String rutaImagen) {
-        super(nombre, vidaMax, recursoMax, ataqueBase, defensaBase, velocidad, rutaImagen);
+        super(nombre, vidaMax, recursoMax, ataqueBase, defensaBase, velocidad, rutaImagen, NOMBRE_RECURSO);
         this.destreza = 15;
     }
 
@@ -16,5 +21,10 @@ public class Asesino extends Personaje {
 
     private void sigilo() {
         // Implementación de la habilidad especial del Asesino
+    }
+
+    @Override
+    public String getNombreRecurso() {
+        return NOMBRE_RECURSO;
     }
 }

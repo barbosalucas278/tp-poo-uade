@@ -2,7 +2,6 @@ package model.partidas;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
 
@@ -49,6 +48,10 @@ public class Partida {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public List<Personaje> getParty() {
+        return party;
     }
 
 }

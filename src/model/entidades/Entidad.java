@@ -28,6 +28,30 @@ public class Entidad {
         this.velocidad = velocidad;
     }
 
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getVidaMax() {
+        return vidaMax;
+    }
+
+    public int getVidaActual() {
+        return vidaActual;
+    }
+
+    public int getRecursoMax() {
+        return recursoMax;
+    }
+
+    public int getRecursoActual() {
+        return recursoActual;
+    }
+
+    public int getEnergiaActual() {
+        return energiaActual;
+    }
+
     public int getAtaqueBase() {
         return ataqueBase;
     }
