@@ -24,8 +24,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 
 import controller.BatallaController;
+import controller.EstadoCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
 import view.componentes.BotonRPG;
@@ -34,7 +36,7 @@ import view.componentes.PanelCombatienteBatalla;
 import view.componentes.PanelConFondo;
 import view.componentes.PanelMarcoDorado;
 
-/** Maqueta de batalla: los datos vienen del controller; las acciones aún no resuelven combate. */
+/** Vista del combate activo y navegación a su resultado. */
 public class PantallaBatalla extends JFrame {
 
     private static final Color DORADO = new Color(212, 175, 55);
@@ -57,6 +59,8 @@ public class PantallaBatalla extends JFrame {
     private final PanelFormacion panelEnemigos = new PanelFormacion(true);
     private CombatienteDTO personajeSeleccionado;
     private CombatienteDTO enemigoSeleccionado;
+    private Timer relojCombate;
+    private boolean resultadoMostrado;
 
     public PantallaBatalla() {
         this(new BatallaController());
@@ -83,7 +87,21 @@ public class PantallaBatalla extends JFrame {
         setContentPane(principal);
 
         inicializarEventos();
-        actualizarBatalla();
+        actualizarBatalla(null);
+        iniciarRelojCombate();
+    }
+
+    private void iniciarRelojCombate() {
+        relojCombate = new Timer(1000, e -> {
+            EstadoCombate estado = controller.verificarEstadoCombate();
+            if (estado == null) {
+                controller.avanzarCombate();
+                estado = controller.verificarEstadoCombate();
+            }
+            actualizarBatalla(estado);
+        });
+
+        relojCombate.start();
     }
 
     private JPanel crearCabecera() {
@@ -215,27 +233,59 @@ public class PantallaBatalla extends JFrame {
     }
 
     private void inicializarEventos() {
-        // TODO(combate): delegar ataque, defensa y habilidades al controller cuando exista
-        // el motor de energía/turnos; luego refrescar los DTO con actualizarBatalla().
-        // TODO(resultado): abrir PantallaResultadoBatalla al detectar victoria o derrota.
-        btnAtacar.addActionListener(e -> mostrarAccionPendiente("Atacar"));
+
+        btnAtacar.addActionListener(e -> {
+            int indicePersonaje = indiceSeleccionado(tarjetasParty);
+            int indiceEnemigo = indiceSeleccionado(tarjetasEnemigos);
+
+            controller.resolverAtaque(indicePersonaje, indiceEnemigo);
+            actualizarBatalla();
+        });
         btnDefender.addActionListener(e -> mostrarAccionPendiente("Defender"));
         btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
         // TODO(habilidades): cargar el catálogo y los costes reales de cada clase.
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");
-        // TODO(inventario): abrir la vista de objetos y consumirlos mediante el controller.
+        // TODO(inventario): abrir la vista de objetos y consumirlos mediante el
+        // controller.
         btnInventario.addActionListener(e -> lblEstado.setText("El inventario aún no está disponible en batalla."));
         btnSalir.addActionListener(e -> {
-            // TODO(combate): pausar/cancelar la batalla activa antes de volver cuando exista el motor.
+            // TODO(combate): pausar/cancelar la batalla activa antes de volver cuando
+            // exista el motor.
             JFrame destino = controller.getMapaActual() == null ? new PantallaInicio() : new PantallaPreBatalla();
             destino.setVisible(true);
             dispose();
         });
     }
 
-    /** Refresca datos reales sin alterar vida, recursos, energía ni progreso. */
+    @Override
+    public void dispose() {
+        if (relojCombate != null) {
+            relojCombate.stop();
+        }
+        super.dispose();
+    }
+
     public void actualizarBatalla() {
+        actualizarBatalla(controller.verificarEstadoCombate());
+    }
+
+    /** Refresca la vista o muestra el resultado una sola vez al terminar el combate. */
+    public void actualizarBatalla(EstadoCombate estado) {
+        if (resultadoMostrado) {
+            return;
+        }
+        if (estado != null) {
+            resultadoMostrado = true;
+            if (relojCombate != null) {
+                relojCombate.stop();
+            }
+            PantallaResultadoBatalla resultado = new PantallaResultadoBatalla(controller, estado);
+            resultado.setLocationRelativeTo(this);
+            resultado.setVisible(true);
+            dispose();
+            return;
+        }
         MapaDTO mapa = controller.getMapaActual();
         lblMapaNivel.setText(mapa == null ? "BATALLA · SIN PARTIDA ACTIVA"
                 : "MAPA " + mapa.numeroMapa + "  ·  NIVEL " + mapa.nivelActual + " DE " + mapa.totalNiveles);
@@ -326,10 +376,14 @@ public class PantallaBatalla extends JFrame {
             return "Habilidad especial";
         }
         switch (personajeSeleccionado.getClase()) {
-            case "Guerrero": return "Grito de guerra";
-            case "Hechicero": return "Meditar";
-            case "Asesino": return "Sigilo";
-            default: return "Habilidad especial";
+            case "Guerrero":
+                return "Grito de guerra";
+            case "Hechicero":
+                return "Meditar";
+            case "Asesino":
+                return "Sigilo";
+            default:
+                return "Habilidad especial";
         }
     }
 
@@ -344,14 +398,34 @@ public class PantallaBatalla extends JFrame {
         return etiqueta;
     }
 
-    public BotonRPG getBtnAtacar() { return btnAtacar; }
-    public BotonRPG getBtnDefender() { return btnDefender; }
-    public BotonRPG getBtnHabilidadPrincipal() { return btnHabilidadPrincipal; }
-    public BotonRPG getBtnHabilidadSecundaria() { return btnHabilidadSecundaria; }
-    public BotonRPG getBtnInventario() { return btnInventario; }
-    public BotonRPG getBtnSalir() { return btnSalir; }
+    public BotonRPG getBtnAtacar() {
+        return btnAtacar;
+    }
 
-    /** Posiciones proporcionales: cuatro aliados en rombo y hasta tres enemigos alternados. */
+    public BotonRPG getBtnDefender() {
+        return btnDefender;
+    }
+
+    public BotonRPG getBtnHabilidadPrincipal() {
+        return btnHabilidadPrincipal;
+    }
+
+    public BotonRPG getBtnHabilidadSecundaria() {
+        return btnHabilidadSecundaria;
+    }
+
+    public BotonRPG getBtnInventario() {
+        return btnInventario;
+    }
+
+    public BotonRPG getBtnSalir() {
+        return btnSalir;
+    }
+
+    /**
+     * Posiciones proporcionales: cuatro aliados en rombo y hasta tres enemigos
+     * alternados.
+     */
     private static class PanelFormacion extends JPanel {
         private final boolean enemigos;
 
@@ -377,25 +451,25 @@ public class PantallaBatalla extends JFrame {
             double proporcionAncho;
             double proporcionAlto;
             if (cantidad == 1) {
-                posiciones = new double[][] {{.5, .5}};
+                posiciones = new double[][] { { .5, .5 } };
                 proporcionAncho = .82;
                 proporcionAlto = .82;
             } else if (cantidad == 2) {
-                posiciones = new double[][] {{.28, .27}, {.72, .73}};
+                posiciones = new double[][] { { .28, .27 }, { .72, .73 } };
                 proporcionAncho = enemigos ? .72 : .52;
                 proporcionAlto = .44;
             } else if (cantidad == 3 && enemigos) {
                 if (getHeight() < 490) {
-                    posiciones = new double[][] {{.5, .24}, {.25, .74}, {.75, .74}};
+                    posiciones = new double[][] { { .5, .24 }, { .25, .74 }, { .75, .74 } };
                     proporcionAncho = .47;
                     proporcionAlto = .45;
                 } else {
-                    posiciones = new double[][] {{.34, .16}, {.66, .5}, {.34, .84}};
+                    posiciones = new double[][] { { .34, .16 }, { .66, .5 }, { .34, .84 } };
                     proporcionAncho = .68;
                     proporcionAlto = .31;
                 }
             } else if (cantidad == 3) {
-                posiciones = new double[][] {{.5, .24}, {.24, .73}, {.76, .73}};
+                posiciones = new double[][] { { .5, .24 }, { .24, .73 }, { .76, .73 } };
                 proporcionAncho = .46;
                 proporcionAlto = .44;
             } else if (cantidad == 4) {
@@ -409,11 +483,12 @@ public class PantallaBatalla extends JFrame {
                     }
                     return;
                 }
-                posiciones = new double[][] {{.5, .16}, {.23, .5}, {.77, .5}, {.5, .84}};
+                posiciones = new double[][] { { .5, .16 }, { .23, .5 }, { .77, .5 }, { .5, .84 } };
                 proporcionAncho = .43;
                 proporcionAlto = .31;
             } else {
-                // La creación actual admite cuatro héroes; la grilla evita ocultar futuras incorporaciones.
+                // La creación actual admite cuatro héroes; la grilla evita ocultar futuras
+                // incorporaciones.
                 int columnas = 2;
                 int filas = (cantidad + 1) / 2;
                 for (int i = 0; i < cantidad; i++) {
@@ -439,7 +514,8 @@ public class PantallaBatalla extends JFrame {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // TODO(assets): reemplazar este fondo provisional por el escenario de batalla definitivo.
+            // TODO(assets): reemplazar este fondo provisional por el escenario de batalla
+            // definitivo.
             g2.setPaint(new GradientPaint(0, 0, new Color(19, 36, 33), 0, getHeight(), new Color(8, 18, 24)));
             g2.fillRect(0, 0, getWidth(), getHeight());
             g2.setColor(new Color(131, 143, 100, 16));

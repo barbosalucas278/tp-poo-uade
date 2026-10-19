@@ -3,7 +3,7 @@ package model.entidades;
 /**
  * Entidad
  */
-public class Entidad {
+public abstract class Entidad {
     protected String nombre;
     protected int vidaMax;
     protected int vidaActual;
@@ -68,6 +68,10 @@ public class Entidad {
         this.defensaBase = defensaBase;
     }
 
+    public int atacar(){
+        return this.ataqueBase;
+    }
+
     public void recibirDanio(int danio) {
         int danioRecibido = danio - this.defensaBase;
         if (danioRecibido < 0) {
@@ -91,6 +95,10 @@ public class Entidad {
         if (this.energiaActual > 100) {
             this.energiaActual = 100;
         }
+    }
+
+    public void reiniciarEnergia() {
+        this.energiaActual = 0;
     }
 
     public void consumirRecursos(int cantidad) {
