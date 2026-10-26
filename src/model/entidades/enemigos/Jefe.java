@@ -17,4 +17,9 @@ public class Jefe extends Enemigo{
     public void usarHabilidadEspecial() {
         // Implementación de la habilidad especial del jefe
     }
+
+    @Override
+    public TipoEnemigo getTipo() {
+        return TipoEnemigo.DRAGON;
+    }
 }

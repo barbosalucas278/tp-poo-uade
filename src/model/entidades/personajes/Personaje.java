@@ -35,6 +35,18 @@ public abstract class Personaje extends Entidad {
         }
     }
 
+    public int getNivel() { 
+    	return nivel; 
+   	}
+    
+    public int getExperienciaActual() {
+    	return experienciaActual; 
+    }
+    
+    public int getExperienciaSiguienteNivel() { 
+    	return experienciaSiguientenivel; 
+    }
+    
     public String getRutaImagen() {
         return rutaImagen;
     }
@@ -46,8 +58,16 @@ public abstract class Personaje extends Entidad {
     public void desequiparItem(TipoObjeto tipo) {
         this.equipamiento.remove(tipo);
     }
+    
+    public void restaurarProgreso(int nivel, int xpActual, int xpSiguiente) {
+        this.nivel = nivel;
+        this.experienciaActual = xpActual;
+        this.experienciaSiguientenivel = xpSiguiente;
+    }
 
     public abstract void usarHabilidadEspecial();
 
     public abstract String getNombreRecurso();
+
+    public abstract TipoPersonaje getTipo();
 }

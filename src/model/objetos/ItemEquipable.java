@@ -16,6 +16,14 @@ public class ItemEquipable extends Item {
         this.bonusAtaque = bonusAtaque;
         this.bonusDefensa = bonusDefensa;
     }
+    
+    public int getBonusAtaque() { 
+    	return bonusAtaque; 
+    }
+    
+    public int getBonusDefensa() { 
+    	return bonusDefensa; 
+    }
 
     public void aplicarBonus(Personaje personaje) {
         if (tipo == TipoObjeto.ARMA) {

@@ -39,6 +39,10 @@ public abstract class Entidad {
     public int getVidaActual() {
         return vidaActual;
     }
+    
+    public void setVidaActual(int vida) {
+        this.vidaActual = Math.max(0, Math.min(vida, vidaMax));
+    }
 
     public int getRecursoMax() {
         return recursoMax;
@@ -46,6 +50,10 @@ public abstract class Entidad {
 
     public int getRecursoActual() {
         return recursoActual;
+    }
+    
+    public void setRecursoActual(int recurso) {
+        this.recursoActual = Math.max(0, Math.min(recurso, recursoMax));
     }
 
     public int getEnergiaActual() {

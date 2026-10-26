@@ -18,7 +18,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.File;
 
 public class PantallaGuardado extends JFrame {
 
@@ -27,9 +26,15 @@ public class PantallaGuardado extends JFrame {
     private JButton btnSlot3;
     private JButton btnVolver;
     private boolean esModoGuardar; // true = Guardar, false = Cargar
+    private JFrame pantallaAnterior; // a dónde vuelve el botón Volver (null = menú principal)
 
     public PantallaGuardado(boolean esModoGuardar) {
+        this(esModoGuardar, null);
+    }
+
+    public PantallaGuardado(boolean esModoGuardar, JFrame pantallaAnterior) {
         this.esModoGuardar = esModoGuardar;
+        this.pantallaAnterior = pantallaAnterior;
 
         // 1. Configuración básica de la ventana
         String modoTexto = esModoGuardar ? "GUARDAR PARTIDA" : "CARGAR PARTIDA";
@@ -77,7 +82,7 @@ public class PantallaGuardado extends JFrame {
         panelMenu.add(btnSlot3, gbc);
 
         // 6. Botón Volver
-        btnVolver = new BotonRPG("VOLVER AL MENÚ");
+        btnVolver = new BotonRPG(pantallaAnterior == null ? "VOLVER AL MENÚ" : "VOLVER");
         btnVolver.setPreferredSize(new Dimension(200, 45));
         gbc.gridy = 4;
         gbc.insets = new Insets(30, 10, 10, 10);
@@ -88,8 +93,7 @@ public class PantallaGuardado extends JFrame {
     }
 
     private String obtenerTextoSlot(String nombreSlot) {
-        File archivo = new File("partidas/" + nombreSlot + ".dat");
-        if (archivo.exists()) {
+        if (GestorPartida.getInstance().existePartidaGuardada(nombreSlot)) {
             return "SLOT: " + nombreSlot.toUpperCase() + " (Partida Guardada)";
         } else {
             return "SLOT: " + nombreSlot.toUpperCase() + " [VACÍO]";
@@ -102,14 +106,21 @@ public class PantallaGuardado extends JFrame {
         btnSlot3.addActionListener(e -> procesarAccionSlot("slot3"));
 
         btnVolver.addActionListener(e -> {
-            PantallaInicio inicio = new PantallaInicio();
-            inicio.setVisible(true);
+            JFrame destino = pantallaAnterior != null ? pantallaAnterior : new PantallaInicio();
+            destino.setVisible(true);
             this.dispose();
         });
     }
 
     private void procesarAccionSlot(String slot) {
         if (esModoGuardar) {
+            if (GestorPartida.getInstance().existePartidaGuardada(slot)) {
+                int opcion = JOptionPane.showConfirmDialog(this, "El " + slot + " ya tiene una partida. ¿Sobrescribirla?",
+                        "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (opcion != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
             boolean exito = GestorPartida.getInstance().guardarPartidaActual(slot);
             if (exito) {
                 JOptionPane.showMessageDialog(this, "Partida guardada correctamente en " + slot, "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -118,13 +129,30 @@ public class PantallaGuardado extends JFrame {
                 JOptionPane.showMessageDialog(this, "No hay partida activa para guardar.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            boolean exito = GestorPartida.getInstance().cargarPartidaExistente(slot);
-            if (exito) {
-                JOptionPane.showMessageDialog(this, "Partida cargada correctamente desde " + slot, "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "El slot seleccionado está vacío.", "Atención", JOptionPane.WARNING_MESSAGE);
-            }
+            cargarYContinuar(slot);
         }
+    }
+
+    private void cargarYContinuar(String slot) {
+        GestorPartida gestor = GestorPartida.getInstance();
+        if (!gestor.existePartidaGuardada(slot)) {
+            JOptionPane.showMessageDialog(this, "El slot seleccionado está vacío.", "Atención", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!gestor.cargarPartidaExistente(slot)) {
+            JOptionPane.showMessageDialog(this, "No se pudo cargar la partida: el archivo está dañado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!gestor.hayNivelPendiente()) {
+            JOptionPane.showMessageDialog(this, "Esta partida ya fue completada: no quedan niveles por jugar.", "Atención", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Se retoma en el mapa, en el primer nivel sin completar
+        PantallaPreBatalla preBatalla = new PantallaPreBatalla();
+        preBatalla.setLocationRelativeTo(this);
+        preBatalla.setVisible(true);
+        this.dispose();
     }
 
     private void actualizarTextoBotones() {

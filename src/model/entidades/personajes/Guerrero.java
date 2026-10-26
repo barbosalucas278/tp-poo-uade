@@ -28,4 +28,9 @@ public class Guerrero extends Personaje {
     public String getNombreRecurso() {
         return NOMBRE_RECURSO;
     }
+
+    @Override
+    public TipoPersonaje getTipo() {
+        return TipoPersonaje.GUERRERO;
+    }
 }

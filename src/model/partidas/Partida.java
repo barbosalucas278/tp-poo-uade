@@ -53,5 +53,13 @@ public class Partida {
     public List<Personaje> getParty() {
         return party;
     }
+    
+    public List<Mapa> getMapas() { 
+    	return mapas; 
+    }
+    
+    public void agregarMapa(Mapa mapa) { 
+    	mapas.add(mapa); 
+    }
 
 }

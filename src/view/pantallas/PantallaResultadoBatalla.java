@@ -41,8 +41,11 @@ public class PantallaResultadoBatalla extends JFrame {
     private final EstadoCombate estado;
     private final BotonRPG btnPrincipal = new BotonRPG("");
     private final BotonRPG btnVolverMenu = new BotonRPG("VOLVER AL MENÚ");
+    private final BotonRPG btnGuardar = new BotonRPG("GUARDAR PARTIDA");
     private final JLabel lblMensaje = etiqueta("", 14, TEXTO);
     private boolean navegando;
+    private boolean victoriaConfirmada;
+    private boolean siguienteNivelDisponible;
 
     public PantallaResultadoBatalla(BatallaController controller, EstadoCombate estado) {
         this.controller = Objects.requireNonNull(controller);
@@ -150,6 +153,14 @@ public class PantallaResultadoBatalla extends JFrame {
         btnPrincipal.addActionListener(e -> navegar(puedeContinuar));
         acciones.add(btnPrincipal, gbc);
 
+        // Con la party derrotada no hay nada útil para guardar
+        if (victoria) {
+            btnGuardar.setPreferredSize(new Dimension(230, 48));
+            btnGuardar.setMnemonic(KeyEvent.VK_G);
+            btnGuardar.addActionListener(e -> abrirGuardado());
+            acciones.add(btnGuardar, gbc);
+        }
+
         btnVolverMenu.setPreferredSize(new Dimension(210, 48));
         btnVolverMenu.setMnemonic(KeyEvent.VK_M);
         btnVolverMenu.setVisible(puedeContinuar);
@@ -167,15 +178,31 @@ public class PantallaResultadoBatalla extends JFrame {
         navegando = true;
         btnPrincipal.setEnabled(false);
         btnVolverMenu.setEnabled(false);
+        btnGuardar.setEnabled(false);
 
-        boolean haySiguienteNivel = false;
-        if (estado == EstadoCombate.VICTORIA) {
-            haySiguienteNivel = controller.continuarAlSiguienteNivel();
-        }
+        boolean haySiguienteNivel = estado == EstadoCombate.VICTORIA && confirmarVictoria();
         JFrame destino = continuar && haySiguienteNivel ? new PantallaPreBatalla() : new PantallaInicio();
         destino.setLocationRelativeTo(this);
         destino.setVisible(true);
         dispose();
+    }
+
+    private void abrirGuardado() {
+        // Se completa el nivel antes de guardar para que al cargar se arranque en el siguiente
+        confirmarVictoria();
+        PantallaGuardado guardado = new PantallaGuardado(true, this);
+        guardado.setLocationRelativeTo(this);
+        guardado.setVisible(true);
+        setVisible(false);
+    }
+
+    /** Completa el nivel una sola vez, ya sea al guardar o al navegar. */
+    private boolean confirmarVictoria() {
+        if (!victoriaConfirmada) {
+            siguienteNivelDisponible = controller.continuarAlSiguienteNivel();
+            victoriaConfirmada = true;
+        }
+        return siguienteNivelDisponible;
     }
 
     private static JLabel etiqueta(String texto, int tamano, Color color) {
@@ -187,6 +214,7 @@ public class PantallaResultadoBatalla extends JFrame {
 
     public BotonRPG getBtnPrincipal() { return btnPrincipal; }
     public BotonRPG getBtnVolverMenu() { return btnVolverMenu; }
+    public BotonRPG getBtnGuardar() { return btnGuardar; }
 
     /** Emblema dibujado para reutilizar el estilo actual sin necesitar nuevos assets. */
     private static class EmblemaResultado extends JPanel {

@@ -8,4 +8,8 @@ public class Elite extends Enemigo {
         super(nombre, vida, energia, ataque, defensa, velocidad, nivel, experiencia);
     }
 
+    @Override
+    public TipoEnemigo getTipo() {
+        return TipoEnemigo.ORCO;
+    }
 }

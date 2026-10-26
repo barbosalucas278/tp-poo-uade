@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import helpers.archivos.GestorArchivos;
+import model.DTOs.PartidaGuardadaDTO;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.enemigos.TipoEnemigo;
 import model.entidades.personajes.Personaje;
+import model.persistencia.PartidaMapper;
 
 public class GestorPartida {
 
@@ -70,18 +73,28 @@ public class GestorPartida {
     }
 
     public boolean guardarPartidaActual(String nombreSlot) {
-        // if (partidaActual != null) {
-        // return GestorArchivos.guardarPartida(partidaActual, nombreSlot);
-        // }
-        return false;
+    	if (partidaActual == null) {
+            return false;
+        }
+        return GestorArchivos.guardar(PartidaMapper.aSnapshot(partidaActual), nombreSlot);
     }
 
     public boolean cargarPartidaExistente(String nombreSlot) {
-        // Jugador j = GestorArchivos.cargarPartida(nombreSlot);
-        // if (j != null) {
-        // this.jugadorActual = j;
-        // return true;
-        // }
-        return false;
+    	PartidaGuardadaDTO snapshot = GestorArchivos.cargar(nombreSlot);
+        if (snapshot == null) {
+            return false;
+        }
+        this.partidaActual = PartidaMapper.desdeSnapshot(snapshot);
+        return true;
+    }
+
+    public boolean existePartidaGuardada(String nombreSlot) {
+        return GestorArchivos.existe(nombreSlot);
+    }
+
+    /** Indica si la partida actual tiene un nivel sin completar para seguir jugando. */
+    public boolean hayNivelPendiente() {
+        Mapa mapa = partidaActual == null ? null : partidaActual.getMapaActual();
+        return mapa != null && mapa.getNivelActual() != null;
     }
 }

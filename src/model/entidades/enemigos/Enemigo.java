@@ -14,10 +14,18 @@ public abstract class Enemigo extends Entidad {
         this.nivel = nivel;
         this.experienciaOtorgada = experienciaOtorgada;
     }
+    
+    public int getNivel() {
+    	return nivel;
+    }
+
+    public abstract TipoEnemigo getTipo();
+
     public Personaje seleccionarObjetivo(List<Personaje> party) {
         int index = (int) (Math.random() * party.size());
         return party.get(index);
     }
+    
     public void atacar(Personaje objetivo) {
         objetivo.recibirDanio(this.ataqueBase);
     }

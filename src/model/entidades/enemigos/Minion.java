@@ -8,4 +8,8 @@ public class Minion extends Enemigo {
         super(nombre, vida, recursoMax, ataque, defensa, velocidad, nivel, experiencia);
     }
 
+    @Override
+    public TipoEnemigo getTipo() {
+        return TipoEnemigo.SLIME;
+    }
 }
