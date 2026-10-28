@@ -36,7 +36,7 @@ public class ResourcesHelper {
 
         switch (tipo) {
             case ESQUELETO:
-                return "/resources/images/enemigos/Esqueleto.png";
+                return "/resources/images/enemigos/Esqueleton.png";
             case ORCO:
                 return "/resources/images/enemigos/OrcoBinarie.png";
             case SLIME:
