@@ -42,6 +42,7 @@ public class ResourcesHelper {
             case SLIME:
                 return "/resources/images/enemigos/SlimeEnojadito.png";
             case DRAGON:
+                return "/resources/images/enemigos/DragonaMilica.png";
             default:
                 return null;
         }

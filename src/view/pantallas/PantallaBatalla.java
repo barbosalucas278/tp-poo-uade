@@ -127,7 +127,7 @@ public class PantallaBatalla extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1;
         gbc.weightx = 0.60;
-        formaciones.add(crearBando("PARTY", panelParty), gbc);
+        formaciones.add(crearBando("TEAM VENGADOR", panelParty), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.40;
         gbc.insets = new Insets(0, 12, 0, 0);
