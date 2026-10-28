@@ -96,7 +96,7 @@ public class PantallaGuardado extends JFrame {
         if (GestorPartida.getInstance().existePartidaGuardada(nombreSlot)) {
             return "SLOT: " + nombreSlot.toUpperCase() + " (Partida Guardada)";
         } else {
-            return "SLOT: " + nombreSlot.toUpperCase() + " [VACÍO]";
+            return "VACÍO";
         }
     }
 

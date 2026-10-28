@@ -1,24 +1,9 @@
 package view.pantallas;
 
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
 import controller.CreacionPartyController;
 import helpers.archivos.ResourcesHelper;
-import model.DTOs.PersonajeDTO;
-import view.componentes.BarraEstadoRPG;
-import view.componentes.BotonRPG;
-import view.componentes.CampoTextoRPG;
-import view.componentes.PanelConFondo;
-import view.componentes.PanelMarcoDorado;
-
+import helpers.entidades.EstadisticasBasePersonajes;
+import helpers.entidades.StatsBaseConfigPerosnajes;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -30,6 +15,24 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.net.URL;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import model.DTOs.PersonajeDTO;
+import model.entidades.personajes.TipoPersonaje;
+import view.componentes.BarraEstadoRPG;
+import view.componentes.BotonRPG;
+import view.componentes.CampoTextoRPG;
+import view.componentes.PanelConFondo;
+import view.componentes.PanelMarcoDorado;
 
 public class PantallaCreacionParty extends JFrame {
     private CreacionPartyController controller;
@@ -39,7 +42,6 @@ public class PantallaCreacionParty extends JFrame {
 
     private JProgressBar barVida, barAtaque, barDefensa;
     private JLabel lblVidaVal, lblAtaqueVal, lblDefensaVal;
-    private int vida = 10, ataque = 8, defensa = 6;
     
     // Variables de selección
     private String claseSeleccionada = "Guerrero"; // "Guerrero", "Asesino", "Maga"
@@ -147,7 +149,7 @@ public class PantallaCreacionParty extends JFrame {
         panel.setOpaque(false);
 
         for (int i = 0; i < 4; i++) {
-            btnSlots[i] = new BotonRPG((i + 1) + "  [VACÍO]  +");
+            btnSlots[i] = new BotonRPG("VACÍO");
             btnSlots[i].setFont(new Font("Georgia", Font.BOLD, 13));
             btnSlots[i].setPreferredSize(new Dimension(220, 100));
             final int index = i;
@@ -176,25 +178,34 @@ public class PantallaCreacionParty extends JFrame {
 
         // 1. Panel Atributos
         JPanel panelAtributos = new PanelMarcoDorado("ATRIBUTOS");
-        panelAtributos.setLayout(new GridBagLayout());
-        GridBagConstraints gbcAtrib = new GridBagConstraints();
-        gbcAtrib.insets = new Insets(8, 8, 8, 8);
-        gbcAtrib.fill = GridBagConstraints.HORIZONTAL;
+        panelAtributos.setLayout(new BorderLayout());
+        panelAtributos.setBorder(BorderFactory.createCompoundBorder(panelAtributos.getBorder(),
+                BorderFactory.createEmptyBorder(12, 16, 12, 16)));
 
-        barVida = new BarraEstadoRPG(Color.RED, 20, vida);
-        lblVidaVal = new JLabel(vida + "/20", SwingConstants.RIGHT);
+        JPanel listaAtributos = new JPanel();
+        listaAtributos.setOpaque(false);
+        listaAtributos.setLayout(new BoxLayout(listaAtributos, BoxLayout.Y_AXIS));
+        listaAtributos.add(Box.createVerticalGlue());
+
+        barVida = new BarraEstadoRPG(new Color(190, 65, 60), 200, 0);
+        lblVidaVal = new JLabel("0 / 100", SwingConstants.RIGHT);
         lblVidaVal.setForeground(Color.WHITE);
-        agregarFilaAtributo(panelAtributos, gbcAtrib, 0, "VIDA", barVida, lblVidaVal);
+        listaAtributos.add(crearFilaAtributo("VIDA", barVida, lblVidaVal));
+        listaAtributos.add(Box.createVerticalStrut(12));
 
-        barAtaque = new BarraEstadoRPG(Color.BLUE, 15, ataque);
-        lblAtaqueVal = new JLabel(ataque + "/15", SwingConstants.RIGHT);
+        barAtaque = new BarraEstadoRPG(new Color(75, 120, 185), 50, 0);
+        lblAtaqueVal = new JLabel("0 / 30", SwingConstants.RIGHT);
         lblAtaqueVal.setForeground(Color.WHITE);
-        agregarFilaAtributo(panelAtributos, gbcAtrib, 1, "ATAQUE", barAtaque, lblAtaqueVal);
+        listaAtributos.add(crearFilaAtributo("ATAQUE", barAtaque, lblAtaqueVal));
+        listaAtributos.add(Box.createVerticalStrut(12));
 
-        barDefensa = new BarraEstadoRPG(Color.GREEN, 12, defensa);
-        lblDefensaVal = new JLabel(defensa + "/12", SwingConstants.RIGHT);
+        barDefensa = new BarraEstadoRPG(new Color(75, 155, 100), 15, 0);
+        lblDefensaVal = new JLabel("0 / 15", SwingConstants.RIGHT);
         lblDefensaVal.setForeground(Color.WHITE);
-        agregarFilaAtributo(panelAtributos, gbcAtrib, 2, "DEFENSA", barDefensa, lblDefensaVal);
+        listaAtributos.add(crearFilaAtributo("DEFENSA", barDefensa, lblDefensaVal));
+        listaAtributos.add(Box.createVerticalGlue());
+
+        panelAtributos.add(listaAtributos, BorderLayout.CENTER);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -232,25 +243,39 @@ public class PantallaCreacionParty extends JFrame {
         btnGuerrero.setSeleccionado(clase.equals("Guerrero"));
         btnAsesino.setSeleccionado(clase.equals("Asesino"));
         btnHechicero.setSeleccionado(clase.equals("Hechicero"));
+        actualizarAtributos();
         actualizarAvatar();
     }
 
-    private void agregarFilaAtributo(JPanel panel, GridBagConstraints gbc, int fila, String nombre, JProgressBar barra, JLabel lblVal) {
-        gbc.gridy = fila * 2;
-        gbc.gridx = 0;
+    private void actualizarAtributos() {
+        TipoPersonaje tipo = TipoPersonaje.valueOf(claseSeleccionada.toUpperCase(java.util.Locale.ROOT));
+        StatsBaseConfigPerosnajes estadisticas = EstadisticasBasePersonajes.obtener(tipo);
+
+        barVida.setValue(estadisticas.getVida());
+        lblVidaVal.setText(estadisticas.getVida() + " / " + barVida.getMaximum());
+        barAtaque.setValue(estadisticas.getAtaque());
+        lblAtaqueVal.setText(estadisticas.getAtaque() + " / " + barAtaque.getMaximum());
+        barDefensa.setValue(estadisticas.getDefensa());
+        lblDefensaVal.setText(estadisticas.getDefensa() + " / " + barDefensa.getMaximum());
+    }
+
+    private JPanel crearFilaAtributo(String nombre, JProgressBar barra, JLabel lblVal) {
+        JPanel fila = new JPanel(new BorderLayout(0, 6));
+        fila.setOpaque(false);
+
+        JPanel encabezado = new JPanel(new BorderLayout());
+        encabezado.setOpaque(false);
         JLabel lbl = new JLabel(nombre);
         lbl.setForeground(new Color(212, 175, 55));
         lbl.setFont(new Font("Georgia", Font.BOLD, 13));
-        panel.add(lbl, gbc);
+        lblVal.setFont(new Font("Georgia", Font.BOLD, 12));
+        encabezado.add(lbl, BorderLayout.WEST);
+        encabezado.add(lblVal, BorderLayout.EAST);
 
-        gbc.gridx = 1;
-        panel.add(lblVal, gbc);
-
-        gbc.gridy = fila * 2 + 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        panel.add(barra, gbc);
-        gbc.gridwidth = 1;
+        fila.add(encabezado, BorderLayout.NORTH);
+        fila.add(barra, BorderLayout.SOUTH);
+        fila.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        return fila;
     }
 
     // =========================================================================
@@ -350,12 +375,29 @@ public class PantallaCreacionParty extends JFrame {
         }
 
         String claseTexto = claseSeleccionada.equals("Hechicera") ? "Hechicero" : claseSeleccionada;
-        nombresPersonajesSlots[slotSeleccionado] = nombre + " - " + claseTexto;
+        String claseVisible = obtenerClaseVisible(claseTexto);
+        nombresPersonajesSlots[slotSeleccionado] = nombre + " - " + claseVisible;
 
-        btnSlots[slotSeleccionado].setText("<html><center>" + nombre + "<br><font color='#D4AF37'>(" + claseTexto + ")</font></center></html>");
+        btnSlots[slotSeleccionado].setText("<html><center>" + nombre + "<br><font color='#D4AF37'>(" + claseVisible + ")</font></center></html>");
 
         controller.agregarPersonaje(new PersonajeDTO(nombre, claseTexto, ResourcesHelper.getRutaImagenPersonaje(claseSeleccionada, generoSeleccionado)));
-        JOptionPane.showMessageDialog(this, "Personaje creado con éxito en el Slot " + (slotSeleccionado + 1), "Éxito", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private String obtenerClaseVisible(String clase) {
+        if (!generoSeleccionado.equals("Mujer")) {
+            return clase;
+        }
+
+        switch (clase) {
+            case "Guerrero":
+                return "Guerrera";
+            case "Asesino":
+                return "Asesina";
+            case "Hechicero":
+                return "Hechicera";
+            default:
+                return clase;
+        }
     }
 
     private void borrarPersonajeSlot() {
@@ -372,7 +414,7 @@ public class PantallaCreacionParty extends JFrame {
         if (confirmacion == JOptionPane.YES_OPTION) {
             controller.removerPersonaje(slotSeleccionado);
             nombresPersonajesSlots[slotSeleccionado] = null;
-            btnSlots[slotSeleccionado].setText((slotSeleccionado + 1) + "  [VACÍO]  +");
+            btnSlots[slotSeleccionado].setText("VACÍO");
             JOptionPane.showMessageDialog(this, "Personaje eliminado del Slot " + (slotSeleccionado + 1), "Slot Vacío", JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -391,7 +433,6 @@ public class PantallaCreacionParty extends JFrame {
             return;
         }
 
-        JOptionPane.showMessageDialog(this, "¡Comienza la aventura en Chronicles of UADE!", "¡A Jugar!", JOptionPane.INFORMATION_MESSAGE);
         controller.iniciarJuego();
         PantallaPreBatalla preBatalla = new PantallaPreBatalla();
         preBatalla.setVisible(true);
