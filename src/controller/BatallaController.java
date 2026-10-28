@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import helpers.archivos.ResourcesHelper;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
@@ -55,7 +56,8 @@ public class BatallaController {
         }
         List<CombatienteDTO> enemigos = new ArrayList<>();
         for (Enemigo enemigo : nivel.getEnemigos()) {
-            enemigos.add(crearCombatiente(enemigo, null, "VIGOR"));
+            enemigos.add(crearCombatiente(enemigo,
+                    ResourcesHelper.getRutaImagenEnemigo(enemigo.getTipo()), "VIGOR"));
         }
         return Collections.unmodifiableList(enemigos);
     }

@@ -177,8 +177,7 @@ public class PanelCombatienteBatalla extends JButton {
             return;
         }
 
-        // TODO(assets): reemplazar los medallones de enemigos por sus sprites definitivos.
-        // También cubre retratos de personajes ausentes sin romper la formación.
+        // Fallback para combatientes sin un sprite disponible.
         int diametro = Math.max(12, Math.min(ancho - 12, alto - 4));
         int medallonX = x + (ancho - diametro) / 2;
         int medallonY = y + (alto - diametro) / 2;
