@@ -37,6 +37,18 @@ public class GestorPartida {
         return this.partidaActual;
     }
 
+    public void avanzarMapa() {
+        if (partidaActual != null) {
+            Mapa mapaActual = partidaActual.getMapaActual();
+            if (mapaActual != null) {
+                mapaActual.setCompletado(true);
+                int numeroMapaSiguiente = mapaActual.getNumeroMapa() + 1;
+                Mapa nuevoMapa = generarNuevoMapa(numeroMapaSiguiente);
+                partidaActual.agregarMapa(nuevoMapa);
+            }
+        }
+    }
+
     private Mapa generarNuevoMapa(int numeroMapa) {
         Random random = new Random();
         List<Nivel> niveles = new ArrayList<>();

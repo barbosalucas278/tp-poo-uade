@@ -243,15 +243,12 @@ public class PantallaBatalla extends JFrame {
         });
         btnDefender.addActionListener(e -> mostrarAccionPendiente("Defender"));
         btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
-        // TODO(habilidades): cargar el catálogo y los costes reales de cada clase.
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");
         // TODO(inventario): abrir la vista de objetos y consumirlos mediante el
         // controller.
         btnInventario.addActionListener(e -> lblEstado.setText("El inventario aún no está disponible en batalla."));
         btnSalir.addActionListener(e -> {
-            // TODO(combate): pausar/cancelar la batalla activa antes de volver cuando
-            // exista el motor.
             JFrame destino = controller.getMapaActual() == null ? new PantallaInicio() : new PantallaPreBatalla();
             destino.setVisible(true);
             dispose();
@@ -514,8 +511,6 @@ public class PantallaBatalla extends JFrame {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // TODO(assets): reemplazar este fondo provisional por el escenario de batalla
-            // definitivo.
             g2.setPaint(new GradientPaint(0, 0, new Color(19, 36, 33), 0, getHeight(), new Color(8, 18, 24)));
             g2.fillRect(0, 0, getWidth(), getHeight());
             g2.setColor(new Color(131, 143, 100, 16));

@@ -45,7 +45,7 @@ public class Partida {
         }
         return mapaActual;
     }
-
+    
     public String getNombre() {
         return nombre;
     }

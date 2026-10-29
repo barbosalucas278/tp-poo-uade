@@ -78,7 +78,7 @@ public class BatallaController {
                 entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual());
     }
 
-    // TODO: incorporar el motor de combate y exponer acciones, habilidades y uso
+    // TODO: exponer habilidades y uso
     // del inventario.
     public void avanzarCombate() {
         motorCombate.avanzarEnergia();
@@ -143,7 +143,6 @@ public class BatallaController {
         return estado;
     }
 
-    /** Confirma la victoria y devuelve si hay otro nivel disponible para preparar. */
     public boolean continuarAlSiguienteNivel() {
         Mapa mapa = obtenerMapaActual();
         Nivel nivel = mapa == null ? null : mapa.getNivelActual();
@@ -153,8 +152,7 @@ public class BatallaController {
 
         nivel.setCompletado(true);
         if (mapa.getNivelActual() == null) {
-            mapa.setCompletado(true);
-            // TODO(progreso): generar/desbloquear el próximo mapa al completar el actual.
+            gestorPartida.avanzarMapa();
         }
         return getMapaActual() != null;
     }

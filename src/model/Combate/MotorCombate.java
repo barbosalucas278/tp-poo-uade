@@ -49,7 +49,6 @@ public class MotorCombate {
         return actorActual;
     }
 
-    // TODO: resolver ataque y finalizar la acción.
     public void ataque(Entidad atacante, Entidad defensor) {
         if (atacante != actorActual) {
             throw new IllegalStateException("No es el turno del atacante.");
@@ -59,6 +58,4 @@ public class MotorCombate {
         atacante.reiniciarEnergia();
         actorActual = null;
     }
-    // TODO: detectar victoria o derrota.
-    // TODO: definir prioridad cuando varios estén listos.
 }

@@ -35,7 +35,6 @@ public class IconoBatalla implements Icon {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g2.setColor(c.isEnabled() ? new Color(212, 175, 85) : new Color(101, 98, 84));
-        // TODO(assets): sustituir por los iconos finales de ataque, defensa, habilidades e inventario.
         switch (tipo) {
             case ATACAR:
                 g2.drawPolygon(new int[] {11, 29, 34, 32, 14}, new int[] {27, 7, 5, 12, 30}, 5);
