@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import helpers.archivos.ResourcesHelper;
+import helpers.entidades.CalculadoraDeExperiencia;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
@@ -140,7 +141,7 @@ public class BatallaController {
         Nivel nivel = mapa == null ? null : mapa.getNivelActual();
         EstadoCombate estado = null;
         if (nivel == null) {
-            //TOOD: Evaluar throw an exception
+            // TOOD: Evaluar throw an exception
             return null;
         }
 
@@ -161,6 +162,9 @@ public class BatallaController {
         if (nivel == null || verificarEstadoCombate() != EstadoCombate.VICTORIA) {
             throw new IllegalStateException("El nivel solo se puede completar después de una victoria.");
         }
+
+        int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(nivel.getEnemigos());
+        gestorPartida.otorgarExperiencia(experienciaGanada);
 
         nivel.setCompletado(true);
         if (mapa.getNivelActual() == null) {

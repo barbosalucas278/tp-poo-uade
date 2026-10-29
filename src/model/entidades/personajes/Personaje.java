@@ -28,25 +28,36 @@ public abstract class Personaje extends Entidad {
 
     public void ganarExperiencia(int experiencia) {
         this.experienciaActual += experiencia;
-        if (this.experienciaActual >= this.experienciaSiguientenivel) {
-            this.nivel++;
-            this.experienciaActual -= this.experienciaSiguientenivel;
-            this.experienciaSiguientenivel *= 1.5;
+        while (this.experienciaActual >= this.experienciaSiguientenivel) {
+            this.subirDeNivel();
         }
     }
 
-    public int getNivel() { 
-    	return nivel; 
-   	}
-    
+    public void subirDeNivel() {
+        boolean teniaVidaLlena = this.vidaActual == this.vidaMax;
+        this.nivel++;
+        this.experienciaActual -= this.experienciaSiguientenivel;
+        this.experienciaSiguientenivel *= 1.5;
+        this.aumentarEstadisticasDeClase();
+        if (teniaVidaLlena) {
+            this.vidaActual = this.vidaMax;
+        }
+    }
+
+    public abstract void aumentarEstadisticasDeClase();
+
+    public int getNivel() {
+        return nivel;
+    }
+
     public int getExperienciaActual() {
-    	return experienciaActual; 
+        return experienciaActual;
     }
-    
-    public int getExperienciaSiguienteNivel() { 
-    	return experienciaSiguientenivel; 
+
+    public int getExperienciaSiguienteNivel() {
+        return experienciaSiguientenivel;
     }
-    
+
     public String getRutaImagen() {
         return rutaImagen;
     }
@@ -58,7 +69,7 @@ public abstract class Personaje extends Entidad {
     public void desequiparItem(TipoObjeto tipo) {
         this.equipamiento.remove(tipo);
     }
-    
+
     public void restaurarProgreso(int nivel, int xpActual, int xpSiguiente) {
         this.nivel = nivel;
         this.experienciaActual = xpActual;

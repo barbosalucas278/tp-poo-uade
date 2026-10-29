@@ -32,4 +32,12 @@ public class Asesino extends Personaje {
     public TipoPersonaje getTipo() {
         return TipoPersonaje.ASESINO;
     }
+
+    @Override
+    public void aumentarEstadisticasDeClase() {
+        this.ataqueBase += 2;
+        this.defensaBase += 1;
+        this.destreza += 4;
+        this.vidaMax += 10;
+    }
 }

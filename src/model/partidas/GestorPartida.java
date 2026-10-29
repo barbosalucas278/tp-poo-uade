@@ -109,4 +109,10 @@ public class GestorPartida {
         Mapa mapa = partidaActual == null ? null : partidaActual.getMapaActual();
         return mapa != null && mapa.getNivelActual() != null;
     }
+
+    public void otorgarExperiencia(int exp){
+        for (Personaje personaje : this.partidaActual.getParty()) {
+            personaje.ganarExperiencia(exp);
+        }
+    }
 }

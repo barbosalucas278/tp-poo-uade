@@ -29,4 +29,8 @@ public abstract class Enemigo extends Entidad {
     public void atacar(Personaje objetivo) {
         objetivo.recibirDanio(this.ataqueBase);
     }
+
+    public int getExperienciaOtorgada() {
+        return experienciaOtorgada;
+    }
 }

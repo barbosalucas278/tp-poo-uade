@@ -4,7 +4,6 @@ public class Guerrero extends Personaje {
     private static final String NOMBRE_RECURSO = "FURIA";
     private int fuerza;
 
-
     public int getFuerza() {
         return fuerza;
     }
@@ -32,5 +31,13 @@ public class Guerrero extends Personaje {
     @Override
     public TipoPersonaje getTipo() {
         return TipoPersonaje.GUERRERO;
+    }
+
+    @Override
+    public void aumentarEstadisticasDeClase() {
+        this.ataqueBase += 2;
+        this.defensaBase += 1;
+        this.fuerza += 4;
+        this.vidaMax += 20;
     }
 }

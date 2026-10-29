@@ -35,4 +35,12 @@ public class Hechicero extends Personaje {
     public TipoPersonaje getTipo() {
         return TipoPersonaje.HECHICERO;
     }
+
+    @Override
+    public void aumentarEstadisticasDeClase() {
+        this.ataqueBase += 2;
+        this.defensaBase += 1;
+        this.intelecto += 4;
+        this.vidaMax += 5;
+    }
 }
