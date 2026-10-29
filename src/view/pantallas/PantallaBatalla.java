@@ -40,13 +40,14 @@ import view.componentes.PanelMarcoDorado;
 public class PantallaBatalla extends JFrame {
 
     private static final Color DORADO = new Color(212, 175, 55);
+    private static final Color AMARILLO_TURNO = new Color(255, 220, 55);
     private static final Color TEXTO = new Color(232, 225, 207);
     private final BatallaController controller;
     private final List<PanelCombatienteBatalla> tarjetasParty = new ArrayList<>();
     private final List<PanelCombatienteBatalla> tarjetasEnemigos = new ArrayList<>();
     private final JLabel lblMapaNivel = etiqueta("", 25, DORADO);
     private final JLabel lblSeleccion = etiqueta("SIN PERSONAJE", 13, DORADO);
-    private final JLabel lblEstado = etiqueta("Elegí un personaje y un objetivo.", 12, TEXTO);
+    private final JLabel lblEstado = etiqueta("Esperando el próximo turno del jugador.", 12, TEXTO);
     private final JLabel lblObjetivo = etiqueta("", 12, TEXTO);
     private final JLabel lblInventario = etiqueta("", 12, TEXTO);
     private final BotonRPG btnHabilidadPrincipal = new BotonRPG("Habilidad especial");
@@ -59,6 +60,7 @@ public class PantallaBatalla extends JFrame {
     private final PanelFormacion panelEnemigos = new PanelFormacion(true);
     private CombatienteDTO personajeSeleccionado;
     private CombatienteDTO enemigoSeleccionado;
+    private int indicePersonajeEnTurno = -1;
     private Timer relojCombate;
     private boolean resultadoMostrado;
 
@@ -238,7 +240,9 @@ public class PantallaBatalla extends JFrame {
             int indicePersonaje = indiceSeleccionado(tarjetasParty);
             int indiceEnemigo = indiceSeleccionado(tarjetasEnemigos);
 
-            controller.resolverAtaque(indicePersonaje, indiceEnemigo);
+            if (controller.resolverAtaque(indicePersonaje, indiceEnemigo)) {
+                limpiarSeleccion();
+            }
             actualizarBatalla();
         });
         btnDefender.addActionListener(e -> mostrarAccionPendiente("Defender"));
@@ -286,20 +290,24 @@ public class PantallaBatalla extends JFrame {
         MapaDTO mapa = controller.getMapaActual();
         lblMapaNivel.setText(mapa == null ? "BATALLA · SIN PARTIDA ACTIVA"
                 : "MAPA " + mapa.numeroMapa + "  ·  NIVEL " + mapa.nivelActual + " DE " + mapa.totalNiveles);
-        int indicePersonaje = indiceSeleccionado(tarjetasParty);
-        int indiceEnemigo = indiceSeleccionado(tarjetasEnemigos);
+        int nuevoTurno = controller.getIndicePersonajeEnTurno();
+        int indiceEnemigo = nuevoTurno >= 0 && nuevoTurno == indicePersonajeEnTurno
+                ? indiceSeleccionado(tarjetasEnemigos) : -1;
+        indicePersonajeEnTurno = nuevoTurno;
         personajeSeleccionado = null;
         enemigoSeleccionado = null;
         cargarCombatientes(controller.getPartyActual(), panelParty, tarjetasParty, false);
         cargarCombatientes(controller.getEnemigosActuales(), panelEnemigos, tarjetasEnemigos, true);
-        restaurarSeleccion(tarjetasParty, indicePersonaje, false);
+        restaurarSeleccion(tarjetasParty, indicePersonajeEnTurno, false);
         restaurarSeleccion(tarjetasEnemigos, indiceEnemigo, true);
         lblInventario.setText(controller.getCantidadItemsInventario() + " objetos disponibles");
         btnInventario.setEnabled(mapa != null);
         btnSalir.setToolTipText(mapa == null ? "Volver al menú" : "Volver a la pantalla de prebatalla");
         actualizarSeleccion();
+        lblEstado.setForeground(personajeSeleccionado == null ? TEXTO : AMARILLO_TURNO);
         lblEstado.setText(mapa == null ? "Iniciá una partida desde el menú para entrar en batalla."
-                : "Elegí un personaje y un objetivo.");
+                : personajeSeleccionado == null ? "La energía avanza. Esperá tu próximo turno."
+                        : "Turno de " + personajeSeleccionado.getNombre() + ": elegí un enemigo para atacar.");
         revalidate();
         repaint();
     }
@@ -310,6 +318,10 @@ public class PantallaBatalla extends JFrame {
         tarjetas.clear();
         for (CombatienteDTO combatiente : combatientes) {
             PanelCombatienteBatalla tarjeta = new PanelCombatienteBatalla(combatiente, enemigos);
+            boolean enTurno = !enemigos && tarjetas.size() == indicePersonajeEnTurno;
+            tarjeta.setEnTurno(enTurno);
+            tarjeta.setEnabled(combatiente.getVidaActual() > 0
+                    && (enemigos ? indicePersonajeEnTurno >= 0 : enTurno));
             tarjeta.addActionListener(e -> seleccionarCombatiente(tarjeta, enemigos));
             tarjetas.add(tarjeta);
             panel.add(tarjeta);
@@ -325,24 +337,30 @@ public class PantallaBatalla extends JFrame {
                 return i;
             }
         }
-        return 0;
+        return -1;
     }
 
     private void restaurarSeleccion(List<PanelCombatienteBatalla> tarjetas, int indice, boolean enemigo) {
-        if (!tarjetas.isEmpty()) {
-            int inicio = Math.min(indice, tarjetas.size() - 1);
-            for (int i = 0; i < tarjetas.size(); i++) {
-                PanelCombatienteBatalla tarjeta = tarjetas.get((inicio + i) % tarjetas.size());
-                if (tarjeta.getCombatiente().getVidaActual() > 0) {
-                    seleccionarCombatiente(tarjeta, enemigo);
-                    break;
-                }
-            }
+        if (indice >= 0 && indice < tarjetas.size()) {
+            seleccionarCombatiente(tarjetas.get(indice), enemigo);
         }
     }
 
+    private void limpiarSeleccion() {
+        personajeSeleccionado = null;
+        enemigoSeleccionado = null;
+        for (PanelCombatienteBatalla tarjeta : tarjetasParty) {
+            tarjeta.setSeleccionado(false);
+            tarjeta.setEnTurno(false);
+        }
+        for (PanelCombatienteBatalla tarjeta : tarjetasEnemigos) {
+            tarjeta.setSeleccionado(false);
+        }
+        indicePersonajeEnTurno = -1;
+    }
+
     private void seleccionarCombatiente(PanelCombatienteBatalla tarjeta, boolean enemigo) {
-        if (tarjeta.getCombatiente().getVidaActual() <= 0) {
+        if (!tarjeta.isEnabled() || tarjeta.getCombatiente().getVidaActual() <= 0) {
             return;
         }
         for (PanelCombatienteBatalla otra : enemigo ? tarjetasEnemigos : tarjetasParty) {
@@ -357,12 +375,17 @@ public class PantallaBatalla extends JFrame {
     }
 
     private void actualizarSeleccion() {
-        lblSeleccion.setText(personajeSeleccionado == null ? "SIN PERSONAJE"
-                : personajeSeleccionado.getClase().toUpperCase(java.util.Locale.ROOT));
+        lblSeleccion.setText(personajeSeleccionado == null ? "ESPERANDO TURNO"
+                : "TU TURNO · " + personajeSeleccionado.getClase().toUpperCase(java.util.Locale.ROOT));
+        lblSeleccion.setForeground(personajeSeleccionado == null ? DORADO : AMARILLO_TURNO);
         lblSeleccion.setToolTipText(personajeSeleccionado == null ? null : personajeSeleccionado.getNombre());
-        lblObjetivo.setText(enemigoSeleccionado == null ? "Seleccioná un enemigo como objetivo."
+        lblObjetivo.setText(personajeSeleccionado == null ? "Sin objetivo seleccionado."
+                : enemigoSeleccionado == null ? "Seleccioná un enemigo como objetivo."
                 : "Objetivo: " + enemigoSeleccionado.getNombre());
         btnAtacar.setEnabled(personajeSeleccionado != null && enemigoSeleccionado != null);
+        btnAtacar.setToolTipText(personajeSeleccionado == null ? "Esperá el turno de un personaje."
+                : enemigoSeleccionado == null ? "Seleccioná un enemigo para atacar."
+                        : "Atacar con " + personajeSeleccionado.getNombre());
         btnDefender.setEnabled(personajeSeleccionado != null);
         btnHabilidadPrincipal.setEnabled(personajeSeleccionado != null);
         btnHabilidadPrincipal.setText(nombreHabilidad());

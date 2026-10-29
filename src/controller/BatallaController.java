@@ -108,18 +108,30 @@ public class BatallaController {
         motorCombate.ataque(enemigo, objetivo);
     }
 
-    public void resolverAtaque(int indicePersonaje, int indiceEnemigo) {
+    public int getIndicePersonajeEnTurno() {
+        Entidad actor = motorCombate.getActorActual();
+        if (!(actor instanceof Personaje) || !actor.estaVivo()) {
+            return -1;
+        }
+        return gestorPartida.getPartidaActual().getParty().indexOf(actor);
+    }
+
+    public boolean resolverAtaque(int indicePersonaje, int indiceEnemigo) {
         List<Personaje> party = gestorPartida.getPartidaActual().getParty();
         Mapa mapa = obtenerMapaActual();
         Nivel nivel = mapa == null ? null : mapa.getNivelActual();
         if (nivel == null || indicePersonaje < 0 || indicePersonaje >= party.size()
                 || indiceEnemigo < 0 || indiceEnemigo >= nivel.getEnemigos().size()) {
-            return;
+            return false;
         }
 
         Personaje personaje = party.get(indicePersonaje);
         Enemigo enemigo = nivel.getEnemigos().get(indiceEnemigo);
+        if (indicePersonaje != getIndicePersonajeEnTurno() || !enemigo.estaVivo()) {
+            return false;
+        }
         motorCombate.ataque(personaje, enemigo);
+        return true;
     }
 
     public EstadoCombate verificarEstadoCombate() {

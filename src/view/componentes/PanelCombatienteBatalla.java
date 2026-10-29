@@ -32,6 +32,7 @@ public class PanelCombatienteBatalla extends JButton {
 
     private static final long serialVersionUID = 1L;
     private static final Color DORADO = new Color(212, 175, 85);
+    private static final Color AMARILLO_TURNO = new Color(255, 220, 55);
     private static final Color TEXTO = new Color(244, 236, 218);
     private static final Color TEXTO_SECUNDARIO = new Color(193, 181, 160);
     private static final Color VIDA = new Color(155, 48, 48);
@@ -42,6 +43,8 @@ public class PanelCombatienteBatalla extends JButton {
     private final boolean enemigo;
     private final boolean derrotado;
     private final Image retrato;
+    private final String descripcion;
+    private boolean enTurno;
 
     public PanelCombatienteBatalla(CombatienteDTO combatiente, boolean enemigo) {
         this.combatiente = Objects.requireNonNull(combatiente, "El combatiente es obligatorio.");
@@ -58,7 +61,7 @@ public class PanelCombatienteBatalla extends JButton {
         setRolloverEnabled(true);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setActionCommand(combatiente.getNombre());
-        String descripcion = combatiente.getNombre() + " — " + combatiente.getClase()
+        descripcion = combatiente.getNombre() + " — " + combatiente.getClase()
                 + ". HP " + combatiente.getVidaActual() + "/" + combatiente.getVidaMax()
                 + (combatiente.getRecursoMax() > 0
                         ? ", " + combatiente.getNombreRecurso() + " "
@@ -92,6 +95,14 @@ public class PanelCombatienteBatalla extends JButton {
 
     public boolean isSeleccionado() {
         return isSelected();
+    }
+
+    public void setEnTurno(boolean enTurno) {
+        this.enTurno = enTurno && !enemigo && !derrotado;
+        String indicacion = this.enTurno ? " Tu turno. Elegí un enemigo para atacar." : "";
+        setToolTipText(descripcion + indicacion);
+        getAccessibleContext().setAccessibleDescription(descripcion + indicacion);
+        repaint();
     }
 
     private Image cargarRetrato(String ruta) {
@@ -128,17 +139,31 @@ public class PanelCombatienteBatalla extends JButton {
             return;
         }
 
-        boolean resaltado = isSeleccionado() || hasFocus();
+        boolean resaltado = isSeleccionado();
         g2.setPaint(new GradientPaint(0, 0, new Color(21, 26, 26, 218),
                 0, alto, new Color(11, 17, 18, 235)));
         g2.fillRoundRect(2, 2, ancho - 4, alto - 4, 14, 14);
+        if (enTurno) {
+            g2.setPaint(new GradientPaint(0, 0, new Color(255, 220, 55, 65),
+                    0, alto, new Color(255, 187, 30, 18)));
+            g2.fillRoundRect(2, 2, ancho - 4, alto - 4, 14, 14);
+            g2.setStroke(new BasicStroke(8f));
+            g2.setColor(new Color(255, 220, 55, 55));
+            g2.drawRoundRect(4, 4, ancho - 9, alto - 9, 14, 14);
+        }
         if (getModel().isRollover() && isEnabled()) {
             g2.setColor(new Color(212, 175, 85, 15));
             g2.fillRoundRect(2, 2, ancho - 4, alto - 4, 14, 14);
         }
-        g2.setStroke(new BasicStroke(resaltado ? 2f : 1f));
-        g2.setColor(resaltado ? DORADO : new Color(128, 116, 87, 100));
+        g2.setStroke(new BasicStroke(enTurno ? 4f : resaltado ? 2f : 1f));
+        g2.setColor(enTurno ? AMARILLO_TURNO : resaltado ? DORADO : new Color(128, 116, 87, 100));
         g2.drawRoundRect(2, 2, ancho - 5, alto - 5, 14, 14);
+        if (hasFocus() && isEnabled()) {
+            g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND,
+                    1f, new float[] { 3f, 3f }, 0));
+            g2.setColor(TEXTO);
+            g2.drawRoundRect(7, 7, ancho - 15, alto - 15, 10, 10);
+        }
 
         boolean compacto = alto <= 190;
         int margen = compacto ? (ancho < 140 ? 6 : 8) : (ancho < 140 ? 7 : 10);
@@ -159,6 +184,10 @@ public class PanelCombatienteBatalla extends JButton {
         // La clase sigue disponible en el tooltip y en la descripción accesible.
         // Al compactar el encabezado se conserva espacio para el retrato completo.
         int inicioRetrato = compacto ? 26 : 40;
+        if (enTurno) {
+            dibujarIndicadorTurno(g2, margen, inicioRetrato, anchoContenido);
+            inicioRetrato += 23;
+        }
         int altoRetrato = Math.max(12, inicioBarras - inicioRetrato - (compacto ? 4 : 6));
         dibujarRetrato(g2, margen, inicioRetrato, anchoContenido, altoRetrato);
         if (enemigo && derrotado) {
@@ -173,13 +202,23 @@ public class PanelCombatienteBatalla extends JButton {
                     combatiente.getRecursoMax(), RECURSO, margen, yBarra, anchoContenido, altoBarra);
             yBarra += altoBarra + espacioBarras;
         }
-        dibujarBarra(g2, "EN", combatiente.getEnergiaActual(), combatiente.getEnergiaMax(), ENERGIA,
+        dibujarBarra(g2, "EN", combatiente.getEnergiaActual(), combatiente.getEnergiaMax(),
+                enTurno ? AMARILLO_TURNO.darker() : ENERGIA,
                 margen, yBarra, anchoContenido, altoBarra);
         if (!isEnabled()) {
-            g2.setColor(new Color(10, 13, 15, 105));
+            g2.setColor(new Color(10, 13, 15, derrotado ? 105 : 30));
             g2.fillRoundRect(2, 2, ancho - 4, alto - 4, 14, 14);
         }
         g2.dispose();
+    }
+
+    private void dibujarIndicadorTurno(Graphics2D g2, int x, int y, int ancho) {
+        int anchoIndicador = Math.min(ancho, 108);
+        int inicio = x + (ancho - anchoIndicador) / 2;
+        g2.setColor(AMARILLO_TURNO);
+        g2.fillRoundRect(inicio, y, anchoIndicador, 18, 8, 8);
+        dibujarTextoCentrado(g2, "TU TURNO", inicio, y + 2, anchoIndicador,
+                new Font("SansSerif", Font.BOLD, 11), new Color(30, 26, 10));
     }
 
     private void dibujarRetrato(Graphics2D g2, int x, int y, int ancho, int alto) {

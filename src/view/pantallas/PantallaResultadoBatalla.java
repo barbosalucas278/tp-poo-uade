@@ -31,7 +31,7 @@ import view.componentes.BotonRPG;
 import view.componentes.PanelConFondo;
 import view.componentes.PanelMarcoDorado;
 
-/** Resumen del combate terminado; el controller administra el avance de nivel. */
+/** Resumen del combate terminado; el controller administra el avance de nivel o mapa. */
 public class PantallaResultadoBatalla extends JFrame {
 
     private static final Color DORADO = new Color(212, 175, 55);
@@ -45,7 +45,7 @@ public class PantallaResultadoBatalla extends JFrame {
     private final JLabel lblMensaje = etiqueta("", 14, TEXTO);
     private boolean navegando;
     private boolean victoriaConfirmada;
-    private boolean siguienteNivelDisponible;
+    private boolean siguienteEncuentroDisponible;
 
     public PantallaResultadoBatalla(BatallaController controller, EstadoCombate estado) {
         this.controller = Objects.requireNonNull(controller);
@@ -117,9 +117,8 @@ public class PantallaResultadoBatalla extends JFrame {
         resumen.add(estadisticas, gbc);
 
         // TODO(recompensas): mostrar experiencia y botín cuando el modelo los otorgue.
-        // TODO(progreso): conectar el siguiente mapa cuando exista su generación/desbloqueo.
         lblMensaje.setText(victoria
-                ? ultimoNivel ? "Mapa completado. ¡Tu party ha superado el último desafío!"
+                ? ultimoNivel ? "Mapa completado. Próximo destino: mapa " + (mapa.numeroMapa + 1) + "."
                         : "Próximo encuentro: nivel " + (mapa.nivelActual + 1) + ". Prepará a tu party para continuar."
                 : "La derrota no avanza el nivel actual.");
         lblMensaje.setForeground(SECUNDARIO);
@@ -140,33 +139,33 @@ public class PantallaResultadoBatalla extends JFrame {
     }
 
     private JPanel crearAcciones(boolean victoria, boolean ultimoNivel) {
-        JPanel acciones = new JPanel(new GridBagLayout());
+        JPanel acciones = new JPanel(new BorderLayout(16, 0));
         acciones.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 8, 0, 8);
 
-        boolean puedeContinuar = victoria && !ultimoNivel;
-        btnPrincipal.setText(puedeContinuar ? "SIGUIENTE NIVEL" : "VOLVER AL MENÚ");
+        btnPrincipal.setText(victoria
+                ? ultimoNivel ? "SIGUIENTE MAPA" : "SIGUIENTE NIVEL"
+                : "VOLVER AL MENÚ");
         btnPrincipal.setPreferredSize(new Dimension(250, 48));
-        btnPrincipal.setMnemonic(puedeContinuar ? KeyEvent.VK_S : KeyEvent.VK_M);
+        btnPrincipal.setMnemonic(victoria ? KeyEvent.VK_S : KeyEvent.VK_M);
         btnPrincipal.setSeleccionado(victoria);
-        btnPrincipal.addActionListener(e -> navegar(puedeContinuar));
-        acciones.add(btnPrincipal, gbc);
-
-        // Con la party derrotada no hay nada útil para guardar
-        if (victoria) {
-            btnGuardar.setPreferredSize(new Dimension(230, 48));
-            btnGuardar.setMnemonic(KeyEvent.VK_G);
-            btnGuardar.addActionListener(e -> abrirGuardado());
-            acciones.add(btnGuardar, gbc);
-        }
+        btnPrincipal.addActionListener(e -> navegar(victoria));
+        acciones.add(btnPrincipal, BorderLayout.EAST);
 
         btnVolverMenu.setPreferredSize(new Dimension(210, 48));
         btnVolverMenu.setMnemonic(KeyEvent.VK_M);
-        btnVolverMenu.setVisible(puedeContinuar);
+        btnVolverMenu.setVisible(victoria);
         btnVolverMenu.addActionListener(e -> navegar(false));
-        if (puedeContinuar) {
-            acciones.add(btnVolverMenu, gbc);
+
+        // Con la party derrotada no hay nada útil para guardar
+        if (victoria) {
+            JPanel secundarias = new JPanel(new GridLayout(1, 2, 12, 0));
+            secundarias.setOpaque(false);
+            secundarias.add(btnVolverMenu);
+            btnGuardar.setPreferredSize(new Dimension(230, 48));
+            btnGuardar.setMnemonic(KeyEvent.VK_G);
+            btnGuardar.addActionListener(e -> abrirGuardado());
+            secundarias.add(btnGuardar);
+            acciones.add(secundarias, BorderLayout.WEST);
         }
         return acciones;
     }
@@ -180,8 +179,8 @@ public class PantallaResultadoBatalla extends JFrame {
         btnVolverMenu.setEnabled(false);
         btnGuardar.setEnabled(false);
 
-        boolean haySiguienteNivel = estado == EstadoCombate.VICTORIA && confirmarVictoria();
-        JFrame destino = continuar && haySiguienteNivel ? new PantallaPreBatalla() : new PantallaInicio();
+        boolean haySiguienteEncuentro = estado == EstadoCombate.VICTORIA && confirmarVictoria();
+        JFrame destino = continuar && haySiguienteEncuentro ? new PantallaPreBatalla() : new PantallaInicio();
         destino.setLocationRelativeTo(this);
         destino.setVisible(true);
         dispose();
@@ -199,10 +198,10 @@ public class PantallaResultadoBatalla extends JFrame {
     /** Completa el nivel una sola vez, ya sea al guardar o al navegar. */
     private boolean confirmarVictoria() {
         if (!victoriaConfirmada) {
-            siguienteNivelDisponible = controller.continuarAlSiguienteNivel();
+            siguienteEncuentroDisponible = controller.continuarAlSiguienteNivel();
             victoriaConfirmada = true;
         }
-        return siguienteNivelDisponible;
+        return siguienteEncuentroDisponible;
     }
 
     private static JLabel etiqueta(String texto, int tamano, Color color) {
