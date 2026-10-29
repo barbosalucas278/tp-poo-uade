@@ -12,8 +12,11 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
 import java.net.URL;
 import java.util.Objects;
 
@@ -37,11 +40,13 @@ public class PanelCombatienteBatalla extends JButton {
 
     private final CombatienteDTO combatiente;
     private final boolean enemigo;
+    private final boolean derrotado;
     private final Image retrato;
 
     public PanelCombatienteBatalla(CombatienteDTO combatiente, boolean enemigo) {
         this.combatiente = Objects.requireNonNull(combatiente, "El combatiente es obligatorio.");
         this.enemigo = enemigo;
+        this.derrotado = combatiente.getVidaActual() <= 0;
         this.retrato = cargarRetrato(combatiente.getRutaImagen());
 
         setPreferredSize(new Dimension(170, 190));
@@ -60,6 +65,7 @@ public class PanelCombatienteBatalla extends JButton {
                                 + combatiente.getRecursoActual() + "/" + combatiente.getRecursoMax()
                         : "")
                 + ", energía " + combatiente.getEnergiaActual() + "/" + combatiente.getEnergiaMax()
+                + (derrotado ? ". Derrotado." : "")
                 + (retrato == null ? ". Ilustración pendiente." : "");
         setToolTipText(descripcion);
         getAccessibleContext().setAccessibleName(combatiente.getNombre() + ", " + combatiente.getClase());
@@ -93,7 +99,20 @@ public class PanelCombatienteBatalla extends JButton {
             return null;
         }
         URL recurso = getClass().getResource(ruta.startsWith("/") ? ruta : "/" + ruta);
-        return recurso == null ? null : new ImageIcon(recurso).getImage();
+        if (recurso == null) {
+            return null;
+        }
+        ImageIcon icono = new ImageIcon(recurso);
+        if (enemigo || !derrotado) {
+            return icono.getImage();
+        }
+        BufferedImage imagen = new BufferedImage(icono.getIconWidth(), icono.getIconHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = imagen.createGraphics();
+        g2.drawImage(icono.getImage(), 0, 0, null);
+        g2.dispose();
+        // La conversión conserva la transparencia del sprite.
+        return new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(imagen, null);
     }
 
     @Override
@@ -142,6 +161,9 @@ public class PanelCombatienteBatalla extends JButton {
         int inicioRetrato = compacto ? 26 : 40;
         int altoRetrato = Math.max(12, inicioBarras - inicioRetrato - (compacto ? 4 : 6));
         dibujarRetrato(g2, margen, inicioRetrato, anchoContenido, altoRetrato);
+        if (enemigo && derrotado) {
+            dibujarCruzDerrota(g2, margen, inicioRetrato, anchoContenido, altoRetrato);
+        }
 
         dibujarBarra(g2, "HP", combatiente.getVidaActual(), combatiente.getVidaMax(), VIDA,
                 margen, inicioBarras, anchoContenido, altoBarra);
@@ -184,20 +206,38 @@ public class PanelCombatienteBatalla extends JButton {
         g2.setColor(new Color(0, 0, 0, 65));
         g2.fillOval(medallonX + diametro / 8, medallonY + diametro - 3, diametro * 3 / 4, 5);
         g2.setPaint(new GradientPaint(medallonX, medallonY,
-                enemigo ? new Color(63, 42, 47) : new Color(37, 58, 61),
-                medallonX, medallonY + diametro, new Color(18, 24, 28)));
+                !enemigo && derrotado ? new Color(54, 54, 54)
+                        : enemigo ? new Color(63, 42, 47) : new Color(37, 58, 61),
+                medallonX, medallonY + diametro,
+                !enemigo && derrotado ? new Color(23, 23, 23) : new Color(18, 24, 28)));
         g2.fillOval(medallonX, medallonY, diametro, diametro);
-        g2.setColor(new Color(157, 135, 90, 155));
+        g2.setColor(!enemigo && derrotado ? new Color(135, 135, 135, 155) : new Color(157, 135, 90, 155));
         g2.setStroke(new BasicStroke(1.2f));
         g2.drawOval(medallonX + 1, medallonY + 1, diametro - 2, diametro - 2);
-        g2.setColor(new Color(142, 132, 124, 50));
+        g2.setColor(!enemigo && derrotado ? new Color(134, 134, 134, 50) : new Color(142, 132, 124, 50));
         int cabeza = diametro / 4;
         g2.fillOval(medallonX + (diametro - cabeza) / 2, medallonY + diametro / 5, cabeza, cabeza);
         g2.fillArc(medallonX + diametro / 5, medallonY + diametro * 2 / 5,
                 diametro * 3 / 5, diametro * 3 / 5, 0, 180);
         dibujarTextoCentrado(g2, iniciales(combatiente.getNombre()), medallonX,
                 medallonY + diametro / 2 - Math.max(11, diametro / 4) / 2,
-                diametro, new Font("Georgia", Font.BOLD, Math.max(11, diametro / 4)), TEXTO_SECUNDARIO);
+                diametro, new Font("Georgia", Font.BOLD, Math.max(11, diametro / 4)),
+                !enemigo && derrotado ? new Color(181, 181, 181) : TEXTO_SECUNDARIO);
+    }
+
+    private void dibujarCruzDerrota(Graphics2D g2, int x, int y, int ancho, int alto) {
+        int tamano = Math.max(8, Math.min(ancho, alto) * 2 / 3);
+        int izquierda = x + (ancho - tamano) / 2;
+        int arriba = y + (alto - tamano) / 2;
+        float grosor = Math.max(3f, tamano / 10f);
+        g2.setStroke(new BasicStroke(grosor + 3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2.setColor(new Color(20, 8, 8, 210));
+        g2.drawLine(izquierda, arriba, izquierda + tamano, arriba + tamano);
+        g2.drawLine(izquierda + tamano, arriba, izquierda, arriba + tamano);
+        g2.setStroke(new BasicStroke(grosor, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2.setColor(new Color(230, 45, 45));
+        g2.drawLine(izquierda, arriba, izquierda + tamano, arriba + tamano);
+        g2.drawLine(izquierda + tamano, arriba, izquierda, arriba + tamano);
     }
 
     private void dibujarBarra(Graphics2D g2, String etiqueta, int actual, int maximo,
