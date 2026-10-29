@@ -14,7 +14,7 @@ public class EnemigoFactory {
                 StatsConfigEnemigos stats = EstadisticasEnemigos.obtener(TipoEnemigo.SLIME);
                 
                 return new Minion(
-                        "Slime",
+                        stats.getNombre(),
                         stats.getVida() + aumento * 10,
                         stats.getRecursoMax(),
                         stats.getAtaque() + aumento * 2,
@@ -26,7 +26,7 @@ public class EnemigoFactory {
             case TipoEnemigo.ESQUELETO:
                 stats = EstadisticasEnemigos.obtener(TipoEnemigo.ESQUELETO);
                 return new Estandar(
-                        "Esqueleto",
+                        stats.getNombre(),
                         stats.getVida() + aumento * 15,
                         stats.getRecursoMax(),
                         stats.getAtaque() + aumento * 3,
@@ -38,7 +38,7 @@ public class EnemigoFactory {
             case TipoEnemigo.ORCO:
                 stats = EstadisticasEnemigos.obtener(TipoEnemigo.ORCO);
                 return new Elite(
-                        "Orco",
+                        stats.getNombre(),
                         stats.getVida() + aumento * 25,
                         stats.getRecursoMax(),
                         stats.getAtaque() + aumento * 4,
@@ -50,7 +50,7 @@ public class EnemigoFactory {
             case TipoEnemigo.DRAGON:
                 stats = EstadisticasEnemigos.obtener(TipoEnemigo.DRAGON);
                 return new Jefe(
-                        "Dragon",
+                        stats.getNombre(),
                         stats.getVida() + aumento * 60,
                         stats.getRecursoMax(),
                         stats.getAtaque() + aumento * 5,

@@ -21,7 +21,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
@@ -31,6 +30,7 @@ import model.entidades.personajes.TipoPersonaje;
 import view.componentes.BarraEstadoRPG;
 import view.componentes.BotonRPG;
 import view.componentes.CampoTextoRPG;
+import view.componentes.DialogoRPG;
 import view.componentes.PanelConFondo;
 import view.componentes.PanelMarcoDorado;
 
@@ -370,7 +370,7 @@ public class PantallaCreacionParty extends JFrame {
     private void crearPersonajeSlot() {
         String nombre = txtNombre.getText().trim();
         if (nombre.isEmpty() || nombre.equals("Nombre de Héroe")) {
-            JOptionPane.showMessageDialog(this, "Por favor, ingresá un nombre para el personaje.", "Atención", JOptionPane.WARNING_MESSAGE);
+            DialogoRPG.mostrarAviso(this, "Atención", "Por favor, ingresá un nombre para el personaje.");
             return;
         }
 
@@ -402,34 +402,31 @@ public class PantallaCreacionParty extends JFrame {
 
     private void borrarPersonajeSlot() {
         if (nombresPersonajesSlots[slotSeleccionado] == null) {
-            JOptionPane.showMessageDialog(this, "El slot seleccionado ya está vacío.", "Atención", JOptionPane.WARNING_MESSAGE);
+            DialogoRPG.mostrarAviso(this, "Atención", "El slot seleccionado ya está vacío.");
             return;
         }
 
-        int confirmacion = JOptionPane.showConfirmDialog(this, 
-                "¿Estás seguro de que querés eliminar el personaje del Slot " + (slotSeleccionado + 1) + "?", 
-                "Confirmar Borrado", 
-                JOptionPane.YES_NO_OPTION);
+        boolean confirmacion = DialogoRPG.confirmar(this, "Confirmar Borrado",
+                "¿Estás seguro de que querés eliminar el personaje del Slot " + (slotSeleccionado + 1) + "?");
 
-        if (confirmacion == JOptionPane.YES_OPTION) {
+        if (confirmacion) {
             controller.removerPersonaje(slotSeleccionado);
             nombresPersonajesSlots[slotSeleccionado] = null;
             btnSlots[slotSeleccionado].setText("VACÍO");
-            JOptionPane.showMessageDialog(this, "Personaje eliminado del Slot " + (slotSeleccionado + 1), "Slot Vacío", JOptionPane.INFORMATION_MESSAGE);
+            DialogoRPG.mostrarAviso(this, "Slot Vacío", "Personaje eliminado del Slot " + (slotSeleccionado + 1));
         }
     }
 
     private void iniciarJuego() {
-        boolean hayPersonajes = false;
+        int cantidadPersonajes = 0;
         for (String slot : nombresPersonajesSlots) {
             if (slot != null) {
-                hayPersonajes = true;
-                break;
+                cantidadPersonajes++;
             }
         }
 
-        if (!hayPersonajes) {
-            JOptionPane.showMessageDialog(this, "Tenés que crear al menos un personaje para comenzar la aventura.", "Party Vacía", JOptionPane.WARNING_MESSAGE);
+        if (cantidadPersonajes < 2) {
+            DialogoRPG.mostrarAviso(this, "Party Incompleta", "Tenés que crear al menos dos personajes para comenzar la aventura.");
             return;
         }
 
