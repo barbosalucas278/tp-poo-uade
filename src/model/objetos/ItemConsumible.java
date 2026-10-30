@@ -23,4 +23,6 @@ public abstract class ItemConsumible extends Item {
     }
     
     public abstract void aplicarEfecto(Personaje personaje);
+
+    public abstract TipoItemConsumible getTipo();
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.DTOs.PartidaGuardadaDTO;
+import model.DTOs.PartidaGuardadaDTO.ConsumibleGuardado;
 import model.DTOs.PartidaGuardadaDTO.EnemigoGuardado;
 import model.DTOs.PartidaGuardadaDTO.ItemGuardado;
 import model.DTOs.PartidaGuardadaDTO.MapaGuardado;
@@ -14,7 +15,9 @@ import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.personajes.Personaje;
 import model.entidades.personajes.PersonajeFactory;
 import model.objetos.Item;
+import model.objetos.ItemConsumible;
 import model.objetos.ItemEquipable;
+import model.objetos.ItemsConsumiblesFactory;
 import model.partidas.Mapa;
 import model.partidas.Nivel;
 import model.partidas.Partida;
@@ -44,7 +47,6 @@ public class PartidaMapper {
             snapshot.party.add(p);
         }
 
-        // Por ahora los únicos items concretos son los equipables (ItemConsumible es abstracto)
         for (Item item : partida.getInventarioGlobal().getItems()) {
             if (item instanceof ItemEquipable) {
                 ItemEquipable equipable = (ItemEquipable) item;
@@ -55,6 +57,13 @@ public class PartidaMapper {
                 i.bonusAtaque = equipable.getBonusAtaque();
                 i.bonusDefensa = equipable.getBonusDefensa();
                 snapshot.inventario.add(i);
+            } else if (item instanceof ItemConsumible) {
+                // Alcanza con tipo y rareza: al cargar, ItemsConsumiblesFactory recalcula nombre, descripción y cantidad
+                ItemConsumible consumible = (ItemConsumible) item;
+                ConsumibleGuardado c = new ConsumibleGuardado();
+                c.tipo = consumible.getTipo();
+                c.rareza = consumible.getRareza();
+                snapshot.consumibles.add(c);
             }
         }
 
@@ -122,6 +131,10 @@ public class PartidaMapper {
         for (ItemGuardado i : snapshot.inventario) {
             partida.getInventarioGlobal().agregarItem(
                     new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa));
+        }
+
+        for (ConsumibleGuardado c : snapshot.consumibles) {
+            partida.getInventarioGlobal().agregarItem(ItemsConsumiblesFactory.CrearItemConsumible(c.rareza, c.tipo));
         }
 
         return partida;

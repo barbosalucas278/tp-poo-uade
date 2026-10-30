@@ -30,4 +30,9 @@ public class PocionVida extends ItemConsumible {
         personaje.recibirSanacion(this._cantidadDeVidaRestaurada);
     }
 
+    @Override
+    public TipoItemConsumible getTipo() {
+        return TipoItemConsumible.POCION_VIDA;
+    }
+
 }

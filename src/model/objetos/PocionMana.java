@@ -34,4 +34,9 @@ public class PocionMana extends ItemConsumible {
         personaje.generarRecursos(_cantidadDeManaRestaurada);
     }
 
+    @Override
+    public TipoItemConsumible getTipo() {
+        return TipoItemConsumible.POCION_MANA;
+    }
+
 }

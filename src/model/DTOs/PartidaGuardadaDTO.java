@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import model.entidades.enemigos.TipoEnemigo;
 import model.entidades.personajes.TipoPersonaje;
+import model.objetos.TipoItemConsumible;
 import model.objetos.TipoObjeto;
+import model.objetos.TipoRareza;
 
 /**
  * Datos de una partida tal como se guardan en el archivo TXT.
@@ -13,6 +15,7 @@ public class PartidaGuardadaDTO {
     public String nombre;
     public List<PersonajeGuardado> party = new ArrayList<>();
     public List<ItemGuardado> inventario = new ArrayList<>();
+    public List<ConsumibleGuardado> consumibles = new ArrayList<>();
     public List<MapaGuardado> mapas = new ArrayList<>();
 
     public static class PersonajeGuardado {
@@ -35,6 +38,11 @@ public class PartidaGuardadaDTO {
         public TipoObjeto tipo;
         public int bonusAtaque;
         public int bonusDefensa;
+    }
+
+    public static class ConsumibleGuardado {
+        public TipoItemConsumible tipo;
+        public TipoRareza rareza;
     }
 
     public static class MapaGuardado {

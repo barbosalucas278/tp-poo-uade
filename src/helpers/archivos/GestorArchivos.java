@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import model.DTOs.PartidaGuardadaDTO;
+import model.DTOs.PartidaGuardadaDTO.ConsumibleGuardado;
 import model.DTOs.PartidaGuardadaDTO.EnemigoGuardado;
 import model.DTOs.PartidaGuardadaDTO.ItemGuardado;
 import model.DTOs.PartidaGuardadaDTO.MapaGuardado;
@@ -19,7 +20,9 @@ import model.DTOs.PartidaGuardadaDTO.NivelGuardado;
 import model.DTOs.PartidaGuardadaDTO.PersonajeGuardado;
 import model.entidades.enemigos.TipoEnemigo;
 import model.entidades.personajes.TipoPersonaje;
+import model.objetos.TipoItemConsumible;
 import model.objetos.TipoObjeto;
+import model.objetos.TipoRareza;
 
 /**
  * Guarda y carga partidas en archivos de texto (partidas/slotN.txt).
@@ -31,6 +34,7 @@ import model.objetos.TipoObjeto;
  * PARTIDA|nombre
  * PERSONAJE|tipo|nombre|rutaImagen|vida|recurso|ataque|defensa|velocidad|nivel|xp|xpSiguienteNivel
  * ITEM|nombre|descripcion|tipo|bonusAtaque|bonusDefensa
+ * CONSUMIBLE|tipo|rareza
  * MAPA|numero|completado
  * NIVEL|numero|completado
  * ENEMIGO|tipo|nivel|vida
@@ -86,6 +90,10 @@ public class GestorArchivos {
                     item.bonusDefensa);
         }
 
+        for (ConsumibleGuardado consumible : partida.consumibles) {
+            escribirLinea(writer, "CONSUMIBLE", consumible.tipo, consumible.rareza);
+        }
+
         for (MapaGuardado mapa : partida.mapas) {
             escribirLinea(writer, "MAPA", mapa.numeroMapa, mapa.completado);
             for (NivelGuardado nivel : mapa.niveles) {
@@ -138,6 +146,13 @@ public class GestorArchivos {
                     item.bonusAtaque = Integer.parseInt(campos[4]);
                     item.bonusDefensa = Integer.parseInt(campos[5]);
                     partida.inventario.add(item);
+                    break;
+
+                case "CONSUMIBLE":
+                    ConsumibleGuardado consumible = new ConsumibleGuardado();
+                    consumible.tipo = TipoItemConsumible.valueOf(campos[1]);
+                    consumible.rareza = TipoRareza.valueOf(campos[2]);
+                    partida.consumibles.add(consumible);
                     break;
 
                 case "MAPA":
