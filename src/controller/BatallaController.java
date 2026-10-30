@@ -185,6 +185,7 @@ public class BatallaController {
 
         Personaje personaje = party.get(indicePersonaje);
         Enemigo enemigo = nivel.getEnemigos().get(indiceEnemigo);
+        personaje.resetEstado();
         if (indicePersonaje != getIndicePersonajeEnTurno() || !enemigo.estaVivo()) {
             return false;
         }
@@ -229,5 +230,14 @@ public class BatallaController {
             gestorPartida.avanzarMapa();
         }
         return getMapaActual() != null;
+    }
+
+    public void resolverDefensa(int indicePersonaje) {
+        List<Personaje> party = gestorPartida.getPartidaActual().getParty();
+
+        Personaje personaje = party.get(indicePersonaje);
+
+        personaje.defenderse();
+        motorCombate.defensa(personaje);
     }
 }

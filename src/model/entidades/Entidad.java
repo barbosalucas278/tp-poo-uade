@@ -39,7 +39,7 @@ public abstract class Entidad {
     public int getVidaActual() {
         return vidaActual;
     }
-    
+
     public void setVidaActual(int vida) {
         this.vidaActual = Math.max(0, Math.min(vida, vidaMax));
     }
@@ -51,7 +51,7 @@ public abstract class Entidad {
     public int getRecursoActual() {
         return recursoActual;
     }
-    
+
     public void setRecursoActual(int recurso) {
         this.recursoActual = Math.max(0, Math.min(recurso, recursoMax));
     }
@@ -76,12 +76,16 @@ public abstract class Entidad {
         this.defensaBase = defensaBase;
     }
 
-    public int atacar(){
+    public int atacar() {
         return this.ataqueBase;
     }
 
     public void recibirDanio(int danio) {
-        int danioRecibido = danio - this.defensaBase;
+        int defensaActual = this.defensaBase;
+        if (this.estaDefendiendose)
+            defensaActual += defensaActual * 2;
+
+        int danioRecibido = danio - defensaActual;
         if (danioRecibido < 0) {
             danioRecibido = 0;
         }
@@ -137,5 +141,13 @@ public abstract class Entidad {
 
     public void setVelocidad(int velocidad) {
         this.velocidad = velocidad;
+    }
+
+    public void defenderse() {
+        this.estaDefendiendose = true;
+    }
+
+    public void resetEstado() {
+        this.estaDefendiendose = false;
     }
 }

@@ -245,7 +245,12 @@ public class PantallaBatalla extends JFrame {
             }
             actualizarBatalla();
         });
-        btnDefender.addActionListener(e -> mostrarAccionPendiente("Defender"));
+        btnDefender.addActionListener(e -> {
+            int indicePersonaje = indiceSeleccionado(tarjetasParty);
+            controller.resolverDefensa(indicePersonaje);
+            limpiarSeleccion();
+            actualizarBatalla();
+        });
         btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");

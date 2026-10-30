@@ -60,6 +60,11 @@ public class MotorCombate {
         finalizarAccion(atacante);
     }
 
+    public void defensa(Entidad personaje) {
+
+        finalizarAccion(personaje);
+    }
+
     /** Usar una poción sobre sí mismo consume la acción del personaje en turno. */
     public void usarItem(Personaje actor, ItemConsumible item, Inventario inventario) {
         if (actor == null || actor != actorActual || !actor.estaVivo()) {

@@ -46,8 +46,8 @@ public class GeneradorDeBotin {
         int resultado = RANDOM.nextInt(100);
 
         if (resultado < 50) {
-            return TipoItemConsumible.POCION_MANA;
+            return TipoItemConsumible.POCION_VIDA;
         }
-        return TipoItemConsumible.POCION_VIDA;
+        return TipoItemConsumible.POCION_MANA;
     }
 }

@@ -81,4 +81,6 @@ public abstract class Personaje extends Entidad {
     public abstract String getNombreRecurso();
 
     public abstract TipoPersonaje getTipo();
+
+
 }
