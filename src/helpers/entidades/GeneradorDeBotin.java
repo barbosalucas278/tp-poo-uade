@@ -45,7 +45,7 @@ public class GeneradorDeBotin {
     private static TipoItemConsumible sortearTipo() {
         int resultado = RANDOM.nextInt(100);
 
-        if (resultado < 50) {
+        if (resultado < 70) {
             return TipoItemConsumible.POCION_VIDA;
         }
         return TipoItemConsumible.POCION_MANA;
