@@ -249,14 +249,38 @@ public class PantallaBatalla extends JFrame {
         btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");
-        // TODO(inventario): abrir la vista de objetos y consumirlos mediante el
-        // controller.
-        btnInventario.addActionListener(e -> lblEstado.setText("El inventario aún no está disponible en batalla."));
+        btnInventario.addActionListener(e -> abrirInventario());
         btnSalir.addActionListener(e -> {
             JFrame destino = controller.getMapaActual() == null ? new PantallaInicio() : new PantallaPreBatalla();
             destino.setVisible(true);
             dispose();
         });
+    }
+
+    private void abrirInventario() {
+        int indicePersonaje = controller.getIndicePersonajeEnTurno();
+        if (indicePersonaje < 0 || resultadoMostrado) {
+            return;
+        }
+        boolean relojActivo = relojCombate != null && relojCombate.isRunning();
+        if (relojActivo) {
+            relojCombate.stop();
+        }
+        try {
+            PantallaInventario inventario = new PantallaInventario(this, controller, indicePersonaje);
+            inventario.setVisible(true);
+            if (inventario.isAccionRealizada()) {
+                limpiarSeleccion();
+            }
+            actualizarBatalla();
+            if (inventario.isAccionRealizada()) {
+                lblEstado.setText(inventario.getMensajeAccion());
+            }
+        } finally {
+            if (relojActivo && !resultadoMostrado && isDisplayable()) {
+                relojCombate.start();
+            }
+        }
     }
 
     @Override
@@ -301,13 +325,16 @@ public class PantallaBatalla extends JFrame {
         restaurarSeleccion(tarjetasParty, indicePersonajeEnTurno, false);
         restaurarSeleccion(tarjetasEnemigos, indiceEnemigo, true);
         lblInventario.setText(controller.getCantidadItemsInventario() + " objetos disponibles");
-        btnInventario.setEnabled(mapa != null);
+        btnInventario.setEnabled(mapa != null && indicePersonajeEnTurno >= 0);
+        btnInventario.setToolTipText(indicePersonajeEnTurno >= 0
+                ? "Usar una poción consume la acción del personaje en turno."
+                : "Esperá el turno de un personaje para abrir el inventario.");
         btnSalir.setToolTipText(mapa == null ? "Volver al menú" : "Volver a la pantalla de prebatalla");
         actualizarSeleccion();
         lblEstado.setForeground(personajeSeleccionado == null ? TEXTO : AMARILLO_TURNO);
         lblEstado.setText(mapa == null ? "Iniciá una partida desde el menú para entrar en batalla."
                 : personajeSeleccionado == null ? "La energía avanza. Esperá tu próximo turno."
-                        : "Turno de " + personajeSeleccionado.getNombre() + ": elegí un enemigo para atacar.");
+                        : "Turno de " + personajeSeleccionado.getNombre() + ": atacá o usá una poción del inventario.");
         revalidate();
         repaint();
     }

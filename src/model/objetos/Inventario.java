@@ -31,11 +31,14 @@ public class Inventario {
         return items.remove(item);
     }
 
-    public void consumirItem(ItemConsumible item, Personaje personaje) {
-        if (items.contains(item)) {
-            item.aplicarEfecto(personaje);
-            items.remove(item);
+    public boolean consumirItem(ItemConsumible item, Personaje personaje) {
+        if (item == null || !items.contains(item)) {
+            return false;
         }
+        item.validarUso(personaje);
+        item.aplicarEfecto(personaje);
+        items.remove(item);
+        return true;
     }
 
     public void equiparItem(ItemEquipable item, Personaje personaje) {

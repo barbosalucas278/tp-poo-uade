@@ -6,12 +6,16 @@ import java.util.List;
 
 import helpers.archivos.ResourcesHelper;
 import helpers.entidades.CalculadoraDeExperiencia;
+import helpers.entidades.GeneradorDeBotin;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
+import model.DTOs.ItemInventarioDTO;
 import model.DTOs.MapaDTO;
 import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Personaje;
+import model.objetos.Item;
+import model.objetos.ItemConsumible;
 import model.partidas.GestorPartida;
 import model.partidas.Mapa;
 import model.partidas.Nivel;
@@ -68,6 +72,60 @@ public class BatallaController {
         return partida == null ? 0 : partida.getInventarioGlobal().getItems().size();
     }
 
+    public int getCapacidadInventario() {
+        Partida partida = gestorPartida.getPartidaActual();
+        return partida == null ? 0 : partida.getInventarioGlobal().getCapacidadMax();
+    }
+
+    public List<ItemInventarioDTO> getItemsInventario() {
+        Partida partida = gestorPartida.getPartidaActual();
+
+        List<ItemInventarioDTO> resultado = new ArrayList<>();
+        List<Item> items = partida.getInventarioGlobal().getItems();
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i);
+            resultado.add(new ItemInventarioDTO(i, item.getNombre(), item.getDescripcion(), item.getRareza(),
+                    item instanceof ItemConsumible));
+        }
+        return resultado;
+    }
+
+    /** Devuelve null si el uso es válido, o el motivo para mostrar en la vista. */
+    public String getMotivoNoPuedeUsarItem(int indicePersonaje, int indiceItem) {
+        try {
+            validarUsoItem(indicePersonaje, indiceItem);
+            return null;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    public void resolverUsoItem(int indicePersonaje, int indiceItem) {
+        ItemConsumible item = validarUsoItem(indicePersonaje, indiceItem);
+        Partida partida = gestorPartida.getPartidaActual();
+        motorCombate.usarItem(partida.getParty().get(indicePersonaje), item, partida.getInventarioGlobal());
+    }
+
+    private ItemConsumible validarUsoItem(int indicePersonaje, int indiceItem) {
+        Partida partida = gestorPartida.getPartidaActual();
+        if (partida == null || verificarEstadoCombate() != null || getMapaActual() == null) {
+            throw new IllegalStateException("No hay un combate activo para usar objetos.");
+        }
+        if (indicePersonaje < 0 || indicePersonaje != getIndicePersonajeEnTurno()) {
+            throw new IllegalStateException("Esperá el turno de un personaje para abrir el inventario.");
+        }
+        List<Item> items = partida.getInventarioGlobal().getItems();
+        if (indiceItem < 0 || indiceItem >= items.size()) {
+            throw new IllegalArgumentException("Elegí un objeto del inventario.");
+        }
+        if (!(items.get(indiceItem) instanceof ItemConsumible)) {
+            throw new IllegalArgumentException("Los equipables no se pueden usar como consumibles en batalla.");
+        }
+        ItemConsumible consumible = (ItemConsumible) items.get(indiceItem);
+        consumible.validarUso(partida.getParty().get(indicePersonaje));
+        return consumible;
+    }
+
     private Mapa obtenerMapaActual() {
         Partida partida = gestorPartida.getPartidaActual();
         return partida == null ? null : partida.getMapaActual();
@@ -79,8 +137,7 @@ public class BatallaController {
                 entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual());
     }
 
-    // TODO: exponer habilidades y uso
-    // del inventario.
+    // TODO: exponer habilidades.
     public void avanzarCombate() {
         motorCombate.avanzarEnergia();
 
@@ -164,8 +221,9 @@ public class BatallaController {
         }
 
         int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(nivel.getEnemigos());
+        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(nivel.getEnemigos());
         gestorPartida.otorgarExperiencia(experienciaGanada);
-
+        gestorPartida.getPartidaActual().setInventarioGlobal(itemsGanados);
         nivel.setCompletado(true);
         if (mapa.getNivelActual() == null) {
             gestorPartida.avanzarMapa();

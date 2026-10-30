@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
+import model.objetos.Item;
 
 /**
  * Partida
@@ -35,6 +36,12 @@ public class Partida {
         return inventarioGlobal;
     }
 
+    public void setInventarioGlobal(List<Item> items) {
+        for (Item item : items) {
+            this.inventarioGlobal.agregarItem(item);
+        }
+    }
+
     public Mapa getMapaActual() {
         Mapa mapaActual = null;
         for (Mapa nivel : mapas) {
@@ -45,7 +52,7 @@ public class Partida {
         }
         return mapaActual;
     }
-    
+
     public String getNombre() {
         return nombre;
     }
@@ -53,13 +60,13 @@ public class Partida {
     public List<Personaje> getParty() {
         return party;
     }
-    
-    public List<Mapa> getMapas() { 
-    	return mapas; 
+
+    public List<Mapa> getMapas() {
+        return mapas;
     }
-    
-    public void agregarMapa(Mapa mapa) { 
-    	mapas.add(mapa); 
+
+    public void agregarMapa(Mapa mapa) {
+        mapas.add(mapa);
     }
 
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Personaje;
+import model.objetos.Inventario;
+import model.objetos.ItemConsumible;
 
 public class MotorCombate {
     private final List<Entidad> participantes = new ArrayList<>();
@@ -55,7 +57,25 @@ public class MotorCombate {
         }
         int danio = atacante.atacar();
         defensor.recibirDanio(danio);
-        atacante.reiniciarEnergia();
+        finalizarAccion(atacante);
+    }
+
+    /** Usar una poción sobre sí mismo consume la acción del personaje en turno. */
+    public void usarItem(Personaje actor, ItemConsumible item, Inventario inventario) {
+        if (actor == null || actor != actorActual || !actor.estaVivo()) {
+            throw new IllegalStateException("Esperá el turno del personaje para usar un objeto.");
+        }
+        if (!participantes.contains(actor)) {
+            throw new IllegalArgumentException("El personaje debe pertenecer a esta batalla.");
+        }
+        if (inventario == null || !inventario.consumirItem(item, actor)) {
+            throw new IllegalArgumentException("El objeto ya no está en el inventario.");
+        }
+        finalizarAccion(actor);
+    }
+
+    private void finalizarAccion(Entidad actor) {
+        actor.reiniciarEnergia();
         actorActual = null;
     }
 }
