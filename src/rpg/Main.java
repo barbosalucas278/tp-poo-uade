@@ -11,7 +11,7 @@ public class Main {
             public void run() {
                 PantallaInicio menu = new PantallaInicio();
                 menu.setVisible(true);
-            }
+                            }
         });
     }
 }

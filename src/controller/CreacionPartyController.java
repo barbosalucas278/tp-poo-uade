@@ -10,31 +10,42 @@ import model.partidas.GestorPartida;
 import model.partidas.Partida;
 
 public class CreacionPartyController {
+    private static final int CANTIDAD_SLOTS = 4;
+
     private GestorPartida gestorPartida;
-    private List<PersonajeDTO> partyDTO;
+    private PersonajeDTO[] partyDTO;
 
     public CreacionPartyController() {
         gestorPartida = GestorPartida.getInstance();
-        this.partyDTO = new ArrayList<>();
+        this.partyDTO = new PersonajeDTO[CANTIDAD_SLOTS];
     }
 
-    public void agregarPersonaje(PersonajeDTO personaje) {
-        partyDTO.add(personaje);
+    // Si el slot ya tenía un personaje, se reemplaza
+    public void agregarPersonaje(int slotSeleccionado, PersonajeDTO personaje) {
+        if (slotSeleccionado >= 0 && slotSeleccionado < partyDTO.length) {
+            partyDTO[slotSeleccionado] = personaje;
+        }
     }
 
     public void removerPersonaje(int slotSeleccionado) {
-        if (slotSeleccionado >= 0 && slotSeleccionado < partyDTO.size()) {
-            partyDTO.remove(slotSeleccionado);
+        if (slotSeleccionado >= 0 && slotSeleccionado < partyDTO.length) {
+            partyDTO[slotSeleccionado] = null;
         }
     }
 
     public List<PersonajeDTO> getParty() {
-        return partyDTO;
+        List<PersonajeDTO> party = new ArrayList<>();
+        for (PersonajeDTO personajeDTO : partyDTO) {
+            if (personajeDTO != null) {
+                party.add(personajeDTO);
+            }
+        }
+        return party;
     }
 
     public void iniciarJuego() {
         List<Personaje> party = new ArrayList<>();
-        for (PersonajeDTO personajeDTO : partyDTO) {
+        for (PersonajeDTO personajeDTO : getParty()) {
             party.add(PersonajeFactory.crearPersonaje(personajeDTO.getNombre(), personajeDTO.getTipoPersonaje(),
                     personajeDTO.getRutaImagen()));
         }

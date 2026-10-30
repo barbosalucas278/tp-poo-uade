@@ -380,7 +380,7 @@ public class PantallaCreacionParty extends JFrame {
 
         btnSlots[slotSeleccionado].setText("<html><center>" + nombre + "<br><font color='#D4AF37'>(" + claseVisible + ")</font></center></html>");
 
-        controller.agregarPersonaje(new PersonajeDTO(nombre, claseTexto, ResourcesHelper.getRutaImagenPersonaje(claseSeleccionada, generoSeleccionado)));
+        controller.agregarPersonaje(slotSeleccionado, new PersonajeDTO(nombre, claseTexto, ResourcesHelper.getRutaImagenPersonaje(claseSeleccionada, generoSeleccionado)));
     }
 
     private String obtenerClaseVisible(String clase) {

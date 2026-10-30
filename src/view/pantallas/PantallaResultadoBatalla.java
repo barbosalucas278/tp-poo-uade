@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -149,7 +151,6 @@ public class PantallaResultadoBatalla extends JFrame {
         btnPrincipal.setMnemonic(victoria ? KeyEvent.VK_S : KeyEvent.VK_M);
         btnPrincipal.setSeleccionado(victoria);
         btnPrincipal.addActionListener(e -> navegar(victoria));
-        acciones.add(btnPrincipal, BorderLayout.EAST);
 
         btnVolverMenu.setPreferredSize(new Dimension(210, 48));
         btnVolverMenu.setMnemonic(KeyEvent.VK_M);
@@ -157,17 +158,30 @@ public class PantallaResultadoBatalla extends JFrame {
         btnVolverMenu.addActionListener(e -> navegar(false));
 
         // Con la party derrotada no hay nada útil para guardar
-        if (victoria) {
-            JPanel secundarias = new JPanel(new GridLayout(1, 2, 12, 0));
-            secundarias.setOpaque(false);
-            secundarias.add(btnVolverMenu);
-            btnGuardar.setPreferredSize(new Dimension(230, 48));
-            btnGuardar.setMnemonic(KeyEvent.VK_G);
-            btnGuardar.addActionListener(e -> abrirGuardado());
-            secundarias.add(btnGuardar);
-            acciones.add(secundarias, BorderLayout.WEST);
+        if (!victoria) {
+            acciones.add(btnPrincipal, BorderLayout.EAST);
+            return acciones;
         }
+
+        btnGuardar.setPreferredSize(new Dimension(230, 48));
+        btnGuardar.setMnemonic(KeyEvent.VK_G);
+        btnGuardar.addActionListener(e -> abrirGuardado());
+
+        // Tres columnas del mismo ancho para que el botón de guardar quede centrado en la ventana
+        JPanel columnas = new JPanel(new GridLayout(1, 3, 12, 0));
+        columnas.setOpaque(false);
+        columnas.add(envolver(btnVolverMenu, FlowLayout.LEFT));
+        columnas.add(envolver(btnGuardar, FlowLayout.CENTER));
+        columnas.add(envolver(btnPrincipal, FlowLayout.RIGHT));
+        acciones.add(columnas, BorderLayout.CENTER);
         return acciones;
+    }
+
+    private JPanel envolver(JComponent componente, int alineacion) {
+        JPanel contenedor = new JPanel(new FlowLayout(alineacion, 0, 0));
+        contenedor.setOpaque(false);
+        contenedor.add(componente);
+        return contenedor;
     }
 
     private void navegar(boolean continuar) {
