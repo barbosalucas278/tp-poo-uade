@@ -6,9 +6,9 @@ import model.entidades.personajes.TipoPersonaje;
 
 public class EstadisticasBasePersonajes {
         private static final Map<TipoPersonaje, StatsBaseConfigPerosnajes> CONFIGURACIONES = Map.of(
-            TipoPersonaje.GUERRERO, new StatsBaseConfigPerosnajes(200, 50, 20, 15, 10),
-            TipoPersonaje.HECHICERO, new StatsBaseConfigPerosnajes(100, 100, 35, 5, 20),
-            TipoPersonaje.ASESINO, new StatsBaseConfigPerosnajes(150, 60, 50, 10, 30)
+            TipoPersonaje.GUERRERO, new StatsBaseConfigPerosnajes(200, 50, 40, 15, 20),
+            TipoPersonaje.HECHICERO, new StatsBaseConfigPerosnajes(100, 100, 35, 5, 40),
+            TipoPersonaje.ASESINO, new StatsBaseConfigPerosnajes(150, 60, 50, 10, 60)
         );
 
     public static StatsBaseConfigPerosnajes obtener(TipoPersonaje tipo) {
