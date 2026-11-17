@@ -138,6 +138,7 @@ public class BatallaController {
     }
 
     // TODO: exponer habilidades.
+    // Avanza la energía de todos; si le toca a un enemigo, decide solo qué hace
     public void avanzarCombate() {
         motorCombate.avanzarEnergia();
 
@@ -149,8 +150,8 @@ public class BatallaController {
 
         Enemigo enemigo = (Enemigo) actor;
 
+        // Arma la lista de personajes que siguen vivos
         List<Personaje> personajesVivos = new ArrayList<>();
-
         for (Personaje personaje : gestorPartida.getPartidaActual().getParty()) {
             if (personaje.estaVivo()) {
                 personajesVivos.add(personaje);
@@ -161,9 +162,18 @@ public class BatallaController {
             return;
         }
 
+        // Efectos de inicio de turno (por ejemplo, la fase de furia del jefe)
+        enemigo.alIniciarTurno();
+
         Personaje objetivo = enemigo.seleccionarObjetivo(personajesVivos);
 
-        motorCombate.ataque(enemigo, objetivo);
+        // Si le alcanza el recurso y sale el sorteo usa su habilidad; si no, ataque normal
+        if (enemigo.quiereUsarHabilidad()) {
+            motorCombate.habilidadEnemigo(enemigo, objetivo, personajesVivos);
+        } else {
+            motorCombate.ataque(enemigo, objetivo);
+            enemigo.recuperarRecursoPorAtaque();
+        }
     }
 
     public int getIndicePersonajeEnTurno() {

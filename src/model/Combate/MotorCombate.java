@@ -60,7 +60,7 @@ public class MotorCombate {
         finalizarAccion(atacante);
     }
 
-       // Ejecuta la habilidad especial del personaje que tiene el turno
+       // Ejecuta la habilidad especial del personaje que tiene el turno PERSONAJE
     public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
         // Solo puede actuar el personaje al que le toca
         if (atacante != actorActual) {
@@ -88,6 +88,17 @@ public class MotorCombate {
         int danio = atacante.usarHabilidadEspecial();
         objetivo.recibirDanio(danio);
         finalizarAccion(atacante);
+    }
+
+    // Ejecuta la habilidad especial del enemigo que tiene el turno ENEMIGO
+    public void habilidadEnemigo(Enemigo enemigo, Personaje objetivo, List<Personaje> personajesVivos) {
+        // Solo puede actuar el enemigo al que le toca
+        if (enemigo != actorActual) {
+            throw new IllegalStateException("No es el turno del enemigo.");
+        }
+        // Cada enemigo aplica su propio efecto (polimorfismo)
+        enemigo.usarHabilidadEspecial(objetivo, personajesVivos);
+        finalizarAccion(enemigo);
     }
 
     public void defensa(Entidad personaje) {
