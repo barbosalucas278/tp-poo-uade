@@ -1,7 +1,10 @@
 package model.entidades.personajes;
 
 public enum TipoPersonaje {
+    ARQUERO,
+    ASESINO,
+    CURADOR,
     GUERRERO,
-    HECHICERO,
-    ASESINO
+    INVOCADOR,
+    MAGO
 }

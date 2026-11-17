@@ -8,7 +8,7 @@ import model.entidades.enemigos.Enemigo;
 import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.enemigos.TipoEnemigo;
 import model.entidades.personajes.Guerrero;
-import model.entidades.personajes.Hechicero;
+import model.entidades.personajes.Mago;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
 import model.objetos.ItemConsumible;
@@ -70,7 +70,7 @@ public class InventarioCombateTest {
     }
 
     private static void restaurarManaRespetaMaximo() {
-        Escenario escenario = new Escenario(new Hechicero("Actor", 100, 100, 20, 5, 10, ""));
+        Escenario escenario = new Escenario(new Mago("Actor", 100, 100, 20, 5, 10, ""));
         escenario.actor.setRecursoActual(90);
         PocionMana pocion = new PocionMana("Maná", "Restaura", 50);
         escenario.inventario.agregarItem(pocion);
@@ -78,7 +78,7 @@ public class InventarioCombateTest {
         escenario.motor.usarItem(escenario.actor, pocion, escenario.inventario);
 
         verificar(escenario.actor.getRecursoActual() == 100, "El maná del actor debe respetar el máximo.");
-        verificar(escenario.actor.getEnergiaActual() == 0, "El hechicero debe consumir su propio turno.");
+        verificar(escenario.actor.getEnergiaActual() == 0, "El mago debe consumir su propio turno.");
         verificar(escenario.inventario.getItems().isEmpty(), "La poción de maná debe consumirse.");
         verificar(escenario.motor.getActorActual() == null, "El uso de maná también consume la acción.");
     }
@@ -97,16 +97,16 @@ public class InventarioCombateTest {
         rechazarSinConsumir(escenario, escenario.actor, vida);
         verificar(escenario.actor.getVidaActual() == 0, "Un personaje caído no puede consumir una poción.");
 
-        Hechicero externo = new Hechicero("Externo", 100, 100, 10, 1, 1, "");
+        Mago externo = new Mago("Externo", 100, 100, 10, 1, 1, "");
         externo.setVidaActual(50);
         rechazarSinConsumir(escenario, externo, vida);
         escenario.actor.setVidaActual(50);
         rechazarSinConsumir(escenario, escenario.actor, new PocionVida("Ajena", "", 25));
 
-        Escenario hechicero = new Escenario(new Hechicero("Actor", 100, 100, 20, 5, 10, ""));
+        Escenario escenarioMago = new Escenario(new Mago("Actor", 100, 100, 20, 5, 10, ""));
         PocionMana manaCompleto = new PocionMana("Maná", "Restaura", 25);
-        hechicero.inventario.agregarItem(manaCompleto);
-        rechazarSinConsumir(hechicero, hechicero.actor, manaCompleto);
+        escenarioMago.inventario.agregarItem(manaCompleto);
+        rechazarSinConsumir(escenarioMago, escenarioMago.actor, manaCompleto);
     }
 
     private static void soloActuaElPersonajeEnTurno() {
@@ -154,7 +154,7 @@ public class InventarioCombateTest {
 
     private static void controllerValidaYExponeElInventario() {
         Guerrero actor = nuevoGuerrero();
-        Hechicero aliado = new Hechicero("Aliado", 100, 100, 20, 5, 5, "");
+        Mago aliado = new Mago("Aliado", 100, 100, 20, 5, 5, "");
         aliado.setVidaActual(20);
         actor.setVidaActual(50);
         actor.acumularEnergia(100);
@@ -242,7 +242,7 @@ public class InventarioCombateTest {
 
     private static final class Escenario {
         private final Personaje actor;
-        private final Hechicero aliado = new Hechicero("Aliado", 100, 100, 20, 5, 5, "");
+        private final Mago aliado = new Mago("Aliado", 100, 100, 20, 5, 5, "");
         private final Enemigo enemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
         private final Inventario inventario = new Inventario();
         private final MotorCombate motor;

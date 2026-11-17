@@ -19,9 +19,31 @@ public class PersonajeFactory {
                         stats.getVelocidad(),
                         rutaImagen);
 
-            case TipoPersonaje.HECHICERO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.HECHICERO);
-                return new Hechicero(
+            case TipoPersonaje.MAGO:
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.MAGO);
+                return new Mago(
+                        nombre,
+                        stats.getVida(),
+                        stats.getRecursoMax(),
+                        stats.getAtaque(),
+                        stats.getDefensa(),
+                        stats.getVelocidad(),
+                        rutaImagen);
+
+            case TipoPersonaje.CURADOR:
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.CURADOR);
+                return new Curador(
+                        nombre,
+                        stats.getVida(),
+                        stats.getRecursoMax(),
+                        stats.getAtaque(),
+                        stats.getDefensa(),
+                        stats.getVelocidad(),
+                        rutaImagen);
+
+            case TipoPersonaje.ARQUERO:
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ARQUERO);
+                return new Arquero(
                         nombre,
                         stats.getVida(),
                         stats.getRecursoMax(),
@@ -33,6 +55,17 @@ public class PersonajeFactory {
             case TipoPersonaje.ASESINO:
                 stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ASESINO);
                 return new Asesino(
+                        nombre,
+                        stats.getVida(),
+                        stats.getRecursoMax(),
+                        stats.getAtaque(),
+                        stats.getDefensa(),
+                        stats.getVelocidad(),
+                        rutaImagen);
+
+            case TipoPersonaje.INVOCADOR:
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.INVOCADOR);
+                return new Invocador(
                         nombre,
                         stats.getVida(),
                         stats.getRecursoMax(),

@@ -10,20 +10,31 @@ public class ResourcesHelper {
 
         boolean mujer = "Mujer".equals(genero);
         switch (clase) {
-            case "Maga":
-            case "Hechicera":
-            case "Hechicero":
+            case "Arquero":
                 return mujer
-                        ? "/resources/images/personajes/MagaLesviana.png"
-                        : "/resources/images/personajes/MagoLesviano.png";
+                        ? "/resources/images/personajes/ArqueraMujer.jpg"
+                        : "/resources/images/personajes/ArqueroHombre.jpg";
             case "Asesino":
                 return mujer
                         ? "/resources/images/personajes/AsesinaMujer.png"
                         : "/resources/images/personajes/AsesinoHombre.png";
+            case "Curador":
+                return mujer
+                        ? "/resources/images/personajes/CuradoraMujer.jpg"
+                        : "/resources/images/personajes/CuradorHombre.jpg";
             case "Guerrero":
                 return mujer
                         ? "/resources/images/personajes/GuerreroMujer.png"
                         : "/resources/images/personajes/GuerreroHombre.png";
+            case "Invocador":
+                return mujer
+                        ? "/resources/images/personajes/InvocadoraMujer.jpg"
+                        : "/resources/images/personajes/InvocadorHombre.jpg";
+            case "Mago":
+                return mujer
+                        ? "/resources/images/personajes/MagaLesviana.png"
+                        : "/resources/images/personajes/MagoLesviano.jpg";
+            
             default:
                 return null;
         }

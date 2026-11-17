@@ -1,9 +1,9 @@
 package model.entidades.personajes;
 
 /**
- * Hechicero
+ * MAGO
  */
-public class Hechicero extends Personaje {
+public class Mago extends Personaje {
     private static final String NOMBRE_RECURSO = "MANA";
     private int intelecto;
 
@@ -11,7 +11,7 @@ public class Hechicero extends Personaje {
         return intelecto;
     }
 
-    public Hechicero(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
+    public Mago(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
             String rutaImagen) {
         super(nombre, vidaMax, recursoMax, ataqueBase, defensaBase, velocidad, rutaImagen, NOMBRE_RECURSO);
         this.intelecto = 15;
@@ -23,7 +23,7 @@ public class Hechicero extends Personaje {
     }
 
     private void meditar() {
-        // Implementación de la habilidad especial del Hechicero
+        // Implementación de la habilidad especial del Mago
     }
 
     @Override
@@ -33,7 +33,7 @@ public class Hechicero extends Personaje {
 
     @Override
     public TipoPersonaje getTipo() {
-        return TipoPersonaje.HECHICERO;
+        return TipoPersonaje.MAGO;
     }
 
     @Override

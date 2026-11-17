@@ -1,6 +1,6 @@
 package model.objetos;
 
-import model.entidades.personajes.Hechicero;
+import model.entidades.personajes.Mago;
 import model.entidades.personajes.Personaje;
 
 public class PocionMana extends ItemConsumible {
@@ -20,8 +20,8 @@ public class PocionMana extends ItemConsumible {
     @Override
     public void validarUso(Personaje personaje) {
         super.validarUso(personaje);
-        if (!(personaje instanceof Hechicero)) {
-            throw new IllegalArgumentException("La poción de maná solo se puede usar sobre un hechicero.");
+        if (!(personaje instanceof Mago)) {
+            throw new IllegalArgumentException("La poción de maná solo se puede usar sobre un mago.");
         }
         if (personaje.getRecursoActual() >= personaje.getRecursoMax()) {
             throw new IllegalArgumentException("El personaje ya tiene el maná completo.");

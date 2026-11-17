@@ -430,7 +430,7 @@ public class PantallaBatalla extends JFrame {
         switch (personajeSeleccionado.getClase()) {
             case "Guerrero":
                 return "Grito de guerra";
-            case "Hechicero":
+            case "Mago":
                 return "Meditar";
             case "Asesino":
                 return "Sigilo";
