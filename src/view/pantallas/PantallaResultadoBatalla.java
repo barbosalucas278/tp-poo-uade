@@ -26,9 +26,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import controller.BatallaController;
-import controller.EstadoCombate;
+import model.Combate.EstadoCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
+import model.DTOs.ResultadoRecompensaDTO;
 import view.componentes.BotonRPG;
 import view.componentes.PanelConFondo;
 import view.componentes.PanelMarcoDorado;
@@ -48,6 +49,7 @@ public class PantallaResultadoBatalla extends JFrame {
     private boolean navegando;
     private boolean victoriaConfirmada;
     private boolean siguienteEncuentroDisponible;
+    private final ResultadoRecompensaDTO recompensa;
 
     public PantallaResultadoBatalla(BatallaController controller, EstadoCombate estado) {
         this.controller = Objects.requireNonNull(controller);
@@ -55,6 +57,10 @@ public class PantallaResultadoBatalla extends JFrame {
         MapaDTO mapa = Objects.requireNonNull(controller.getMapaActual(), "Debe existir un nivel para mostrar su resultado.");
         boolean victoria = estado == EstadoCombate.VICTORIA;
         boolean ultimoNivel = mapa.nivelActual == mapa.totalNiveles;
+        List<CombatienteDTO> partyResultado = controller.getPartyActual();
+        List<CombatienteDTO> enemigosResultado = controller.getEnemigosActuales();
+        this.recompensa = victoria ? controller.prepararResultadoVictoria() : null;
+        this.siguienteEncuentroDisponible = victoria;
 
         setTitle("Chronicles of UADE - Resultado de batalla");
         setSize(980, 640);
@@ -77,14 +83,15 @@ public class PantallaResultadoBatalla extends JFrame {
         cabecera.add(etiqueta("MAPA " + mapa.numeroMapa + "  ·  NIVEL " + mapa.nivelActual
                 + " DE " + mapa.totalNiveles, 17, TEXTO), BorderLayout.CENTER);
         marco.add(cabecera, BorderLayout.NORTH);
-        marco.add(crearResumen(mapa, victoria, ultimoNivel), BorderLayout.CENTER);
+        marco.add(crearResumen(mapa, victoria, ultimoNivel, partyResultado, enemigosResultado), BorderLayout.CENTER);
         marco.add(crearAcciones(victoria, ultimoNivel), BorderLayout.SOUTH);
         principal.add(marco, BorderLayout.CENTER);
         setContentPane(principal);
         getRootPane().setDefaultButton(btnPrincipal);
     }
 
-    private JPanel crearResumen(MapaDTO mapa, boolean victoria, boolean ultimoNivel) {
+    private JPanel crearResumen(MapaDTO mapa, boolean victoria, boolean ultimoNivel,
+            List<CombatienteDTO> partyResultado, List<CombatienteDTO> enemigosResultado) {
         JPanel resumen = new JPanel(new GridBagLayout());
         resumen.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -103,22 +110,25 @@ public class PantallaResultadoBatalla extends JFrame {
                 : "Tu party ha caído. Podés comenzar una nueva aventura desde el menú.";
         resumen.add(etiqueta(descripcion, 14, TEXTO), gbc);
 
-        List<CombatienteDTO> party = controller.getPartyActual();
-        List<CombatienteDTO> enemigos = controller.getEnemigosActuales();
-        long sobrevivientes = party.stream().filter(p -> p.getVidaActual() > 0).count();
-        long derrotados = enemigos.stream().filter(e -> e.getVidaActual() <= 0).count();
+        long sobrevivientes = partyResultado.stream().filter(p -> p.getVidaActual() > 0).count();
+        long derrotados = enemigosResultado.stream().filter(e -> e.getVidaActual() <= 0).count();
 
         JPanel estadisticas = new JPanel(new GridLayout(1, 3, 14, 0));
         estadisticas.setOpaque(false);
         estadisticas.add(crearDato("NIVEL", mapa.nivelActual + " / " + mapa.totalNiveles));
-        estadisticas.add(crearDato("ENEMIGOS DERROTADOS", derrotados + " / " + enemigos.size()));
-        estadisticas.add(crearDato("HÉROES EN PIE", sobrevivientes + " / " + party.size()));
+        estadisticas.add(crearDato("ENEMIGOS DERROTADOS", derrotados + " / " + enemigosResultado.size()));
+        estadisticas.add(crearDato("HÉROES EN PIE", sobrevivientes + " / " + partyResultado.size()));
         gbc.gridy++;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(20, 0, 14, 0);
         resumen.add(estadisticas, gbc);
 
-        // TODO(recompensas): mostrar experiencia y botín cuando el modelo los otorgue.
+        if (victoria) {
+            gbc.gridy++;
+            gbc.insets = new Insets(8, 0, 14, 0);
+            resumen.add(crearResumenRecompensas(), gbc);
+        }
+
         lblMensaje.setText(victoria
                 ? ultimoNivel ? "Mapa completado. Próximo destino: mapa " + (mapa.numeroMapa + 1) + "."
                         : "Próximo encuentro: nivel " + (mapa.nivelActual + 1) + ". Prepará a tu party para continuar."
@@ -128,6 +138,24 @@ public class PantallaResultadoBatalla extends JFrame {
         gbc.insets = new Insets(0, 0, 0, 0);
         resumen.add(lblMensaje, gbc);
         return resumen;
+    }
+
+    private JPanel crearResumenRecompensas() {
+        JPanel recompensas = new JPanel(new GridLayout(4, 1, 0, 4));
+        recompensas.setOpaque(false);
+        recompensas.add(etiqueta("EXPERIENCIA: +" + recompensa.getExperienciaOtorgada(), 14, DORADO));
+        recompensas.add(etiqueta("BOTÍN OBTENIDO: " + mostrarLista(recompensa.getObjetosObtenidos(), "Sin botín"),
+                13, TEXTO));
+        recompensas.add(etiqueta("INCORPORADO AL INVENTARIO: "
+                + mostrarLista(recompensa.getObjetosIncorporados(), "Ninguno"), 13, TEXTO));
+        recompensas.add(etiqueta("DESCARTADO POR CAPACIDAD: "
+                + mostrarLista(recompensa.getObjetosDescartados(), "Ninguno"), 13,
+                recompensa.getObjetosDescartados().isEmpty() ? TEXTO : new Color(235, 150, 135)));
+        return recompensas;
+    }
+
+    private String mostrarLista(List<String> valores, String vacio) {
+        return valores.isEmpty() ? vacio : String.join(", ", valores);
     }
 
     private JPanel crearDato(String titulo, String valor) {
@@ -212,7 +240,8 @@ public class PantallaResultadoBatalla extends JFrame {
     /** Completa el nivel una sola vez, ya sea al guardar o al navegar. */
     private boolean confirmarVictoria() {
         if (!victoriaConfirmada) {
-            siguienteEncuentroDisponible = controller.continuarAlSiguienteNivel();
+            // Las recompensas y el avance ya se aplicaron al preparar el resultado.
+            siguienteEncuentroDisponible = true;
             victoriaConfirmada = true;
         }
         return siguienteEncuentroDisponible;

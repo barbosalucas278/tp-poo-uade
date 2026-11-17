@@ -3,32 +3,46 @@ package controller;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import helpers.archivos.ResourcesHelper;
-import helpers.entidades.CalculadoraDeExperiencia;
-import helpers.entidades.GeneradorDeBotin;
+import model.Combate.EstadoCombate;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.ItemInventarioDTO;
 import model.DTOs.MapaDTO;
+import model.DTOs.ResultadoRecompensaDTO;
 import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Personaje;
 import model.objetos.Item;
 import model.objetos.ItemConsumible;
+import model.objetos.ItemEquipable;
+import model.objetos.TipoObjeto;
 import model.partidas.GestorPartida;
 import model.partidas.Mapa;
 import model.partidas.Nivel;
 import model.partidas.Partida;
+import model.partidas.ResultadoRecompensa;
 
 public class BatallaController {
+    private static final Logger LOGGER = Logger.getLogger(BatallaController.class.getName());
     private final GestorPartida gestorPartida;
-    private final MotorCombate motorCombate;
+    private MotorCombate motorCombate;
+    private ResultadoRecompensa resultadoVictoriaPendiente;
+    private EstadoCombate ultimoEstadoLogueado;
 
     public BatallaController() {
         this.gestorPartida = GestorPartida.getInstance();
         Partida partidaActual = this.gestorPartida.getPartidaActual();
-        this.motorCombate = new MotorCombate(partidaActual.getParty(),
+        this.motorCombate = crearMotorCombate();
+        LOGGER.info("Inicio de batalla: " + (partidaActual == null ? "sin partida" : partidaActual.getNombre()));
+    }
+
+    private MotorCombate crearMotorCombate() {
+        Partida partidaActual = gestorPartida.getPartidaActual();
+        return new MotorCombate(partidaActual.getParty(),
                 partidaActual.getMapaActual().getNivelActual().getEnemigos());
     }
 
@@ -101,14 +115,173 @@ public class BatallaController {
     }
 
     public void resolverUsoItem(int indicePersonaje, int indiceItem) {
-        ItemConsumible item = validarUsoItem(indicePersonaje, indiceItem);
         Partida partida = gestorPartida.getPartidaActual();
+        validarIndicePersonaje(partida, indicePersonaje);
+        ItemConsumible item = obtenerConsumiblePorIndice(partida, indiceItem);
         motorCombate.usarItem(partida.getParty().get(indicePersonaje), item, partida.getInventarioGlobal());
+    }
+
+    public String getMotivoNoPuedeEquiparItem(int indicePersonaje, int indiceItem) {
+        try {
+            obtenerEquipableValido(indicePersonaje, indiceItem);
+            return null;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    public void resolverEquiparItem(int indicePersonaje, int indiceItem) {
+        Partida partida = gestorPartida.getPartidaActual();
+        validarIndicePersonaje(partida, indicePersonaje);
+        ItemEquipable item = obtenerEquipablePorIndice(partida, indiceItem);
+        motorCombate.equiparItem(partida.getParty().get(indicePersonaje), item, partida);
+    }
+
+    public String getMotivoNoPuedeDesequiparItem(int indicePersonaje, TipoObjeto tipo) {
+        try {
+            obtenerEquipadoValido(indicePersonaje, tipo);
+            return null;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    public void resolverDesequiparItem(int indicePersonaje, TipoObjeto tipo) {
+        Partida partida = gestorPartida.getPartidaActual();
+        validarIndicePersonaje(partida, indicePersonaje);
+        ItemEquipable item = obtenerEquipadoPorTipo(partida, indicePersonaje, tipo);
+        motorCombate.desequiparItem(partida.getParty().get(indicePersonaje), item, partida);
+    }
+
+    public List<TipoObjeto> getSlotsEquipados(int indicePersonaje) {
+        Partida partida = gestorPartida.getPartidaActual();
+        if (partida == null || indicePersonaje < 0 || indicePersonaje >= partida.getParty().size()) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(partida.getParty().get(indicePersonaje).getEquipamiento().keySet());
+    }
+
+    private ItemEquipable obtenerEquipableValido(int indicePersonaje, int indiceItem) {
+        validarCambioEquipamiento(indicePersonaje);
+        return obtenerEquipablePorIndice(gestorPartida.getPartidaActual(), indiceItem);
+    }
+
+    private ItemEquipable obtenerEquipablePorIndice(Partida partida, int indiceItem) {
+        List<Item> items = partida.getInventarioGlobal().getItems();
+        if (indiceItem < 0 || indiceItem >= items.size() || !(items.get(indiceItem) instanceof ItemEquipable)) {
+            throw new IllegalArgumentException("Elegí un equipable disponible.");
+        }
+        return (ItemEquipable) items.get(indiceItem);
+    }
+
+    private ItemEquipable obtenerEquipadoValido(int indicePersonaje, TipoObjeto tipo) {
+        validarCambioEquipamiento(indicePersonaje);
+        return obtenerEquipadoPorTipo(gestorPartida.getPartidaActual(), indicePersonaje, tipo);
+    }
+
+    private ItemEquipable obtenerEquipadoPorTipo(Partida partida, int indicePersonaje, TipoObjeto tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("Elegí un slot válido.");
+        }
+        Personaje personaje = partida.getParty().get(indicePersonaje);
+        ItemEquipable item = personaje.getEquipamiento().get(tipo);
+        if (item == null) {
+            throw new IllegalArgumentException("No hay un objeto equipado en ese slot.");
+        }
+        return item;
+    }
+
+    private void validarCambioEquipamiento(int indicePersonaje) {
+        Partida partida = gestorPartida.getPartidaActual();
+        if (partida == null || motorCombate.getEstadoCombate() != EstadoCombate.EN_CURSO
+                || getMapaActual() == null) {
+            throw new IllegalStateException("No hay un combate activo para cambiar el equipamiento.");
+        }
+        validarIndicePersonaje(partida, indicePersonaje);
+        motorCombate.validarActorDeTurno(partida.getParty().get(indicePersonaje));
+    }
+
+    private void validarIndicePersonaje(Partida partida, int indicePersonaje) {
+        if (partida == null || indicePersonaje < 0 || indicePersonaje >= partida.getParty().size()) {
+            throw new IllegalArgumentException("Elegí un personaje válido.");
+        }
+    }
+
+    private ItemConsumible obtenerConsumiblePorIndice(Partida partida, int indiceItem) {
+        if (partida == null) {
+            throw new IllegalStateException("No hay una partida activa.");
+        }
+        List<Item> items = partida.getInventarioGlobal().getItems();
+        if (indiceItem < 0 || indiceItem >= items.size()) {
+            throw new IllegalArgumentException("Elegí un objeto del inventario.");
+        }
+        if (!(items.get(indiceItem) instanceof ItemConsumible)) {
+            throw new IllegalArgumentException("Los equipables no se pueden usar como consumibles en batalla.");
+        }
+        return (ItemConsumible) items.get(indiceItem);
+    }
+
+    public String getMotivoNoPuedeUsarHabilidad(int indicePersonaje, boolean objetivoAliado, int indiceObjetivo) {
+        try {
+            validarHabilidad(indicePersonaje, objetivoAliado, indiceObjetivo);
+            return null;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    public void resolverHabilidad(int indicePersonaje, boolean objetivoAliado, int indiceObjetivo) {
+        Partida partida = gestorPartida.getPartidaActual();
+        validarIndicePersonaje(partida, indicePersonaje);
+        Entidad objetivo = obtenerObjetivoHabilidad(partida, objetivoAliado, indiceObjetivo);
+        motorCombate.habilidad(partida.getParty().get(indicePersonaje), objetivo);
+    }
+
+    public String getNombreHabilidad(int indicePersonaje) {
+        List<Personaje> party = gestorPartida.getPartidaActual().getParty();
+        if (indicePersonaje < 0 || indicePersonaje >= party.size()) {
+            throw new IllegalArgumentException("Personaje inválido.");
+        }
+        return party.get(indicePersonaje).getNombreHabilidadEspecial();
+    }
+
+    private Entidad validarHabilidad(int indicePersonaje, boolean objetivoAliado, int indiceObjetivo) {
+        Partida partida = gestorPartida.getPartidaActual();
+        if (partida == null || verificarEstadoCombate() != EstadoCombate.EN_CURSO || getMapaActual() == null) {
+            throw new IllegalStateException("No hay un combate activo para usar habilidades.");
+        }
+        List<Personaje> party = partida.getParty();
+        if (indicePersonaje < 0 || indicePersonaje >= party.size()
+                || indicePersonaje != getIndicePersonajeEnTurno()) {
+            throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
+        }
+        Entidad objetivo = obtenerObjetivoHabilidad(partida, objetivoAliado, indiceObjetivo);
+        Personaje actor = party.get(indicePersonaje);
+        motorCombate.validarHabilidad(actor, objetivo);
+        return objetivo;
+    }
+
+    private Entidad obtenerObjetivoHabilidad(Partida partida, boolean objetivoAliado, int indiceObjetivo) {
+        Entidad objetivo;
+        List<Personaje> party = partida.getParty();
+        if (objetivoAliado) {
+            if (indiceObjetivo < 0 || indiceObjetivo >= party.size()) {
+                throw new IllegalArgumentException("Elegí un aliado válido.");
+            }
+            objetivo = party.get(indiceObjetivo);
+        } else {
+            Nivel nivel = obtenerMapaActual().getNivelActual();
+            if (indiceObjetivo < 0 || indiceObjetivo >= nivel.getEnemigos().size()) {
+                throw new IllegalArgumentException("Elegí un enemigo válido.");
+            }
+            objetivo = nivel.getEnemigos().get(indiceObjetivo);
+        }
+        return objetivo;
     }
 
     private ItemConsumible validarUsoItem(int indicePersonaje, int indiceItem) {
         Partida partida = gestorPartida.getPartidaActual();
-        if (partida == null || verificarEstadoCombate() != null || getMapaActual() == null) {
+        if (partida == null || verificarEstadoCombate() != EstadoCombate.EN_CURSO || getMapaActual() == null) {
             throw new IllegalStateException("No hay un combate activo para usar objetos.");
         }
         if (indicePersonaje < 0 || indicePersonaje != getIndicePersonajeEnTurno()) {
@@ -137,8 +310,9 @@ public class BatallaController {
                 entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual());
     }
 
-    // TODO: exponer habilidades.
     public void avanzarCombate() {
+        resultadoVictoriaPendiente = null;
+        try {
         motorCombate.avanzarEnergia();
 
         Entidad actor = motorCombate.getActorActual();
@@ -149,21 +323,11 @@ public class BatallaController {
 
         Enemigo enemigo = (Enemigo) actor;
 
-        List<Personaje> personajesVivos = new ArrayList<>();
-
-        for (Personaje personaje : gestorPartida.getPartidaActual().getParty()) {
-            if (personaje.estaVivo()) {
-                personajesVivos.add(personaje);
-            }
+        motorCombate.ejecutarTurnoEnemigo(enemigo);
+        } catch (RuntimeException excepcion) {
+            LOGGER.log(Level.SEVERE, "Excepción al avanzar el combate", excepcion);
+            throw excepcion;
         }
-
-        if (personajesVivos.isEmpty()) {
-            return;
-        }
-
-        Personaje objetivo = enemigo.seleccionarObjetivo(personajesVivos);
-
-        motorCombate.ataque(enemigo, objetivo);
     }
 
     public int getIndicePersonajeEnTurno() {
@@ -185,59 +349,68 @@ public class BatallaController {
 
         Personaje personaje = party.get(indicePersonaje);
         Enemigo enemigo = nivel.getEnemigos().get(indiceEnemigo);
-        personaje.resetEstado();
-        if (indicePersonaje != getIndicePersonajeEnTurno() || !enemigo.estaVivo()) {
+        try {
+            motorCombate.ataque(personaje, enemigo);
+            return true;
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return false;
         }
-        motorCombate.ataque(personaje, enemigo);
-        return true;
     }
 
     public EstadoCombate verificarEstadoCombate() {
-        Partida partida = gestorPartida.getPartidaActual();
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        EstadoCombate estado = null;
-        if (nivel == null) {
-            // TOOD: Evaluar throw an exception
-            return null;
-        }
-
-        boolean todosEnemigosDerrotados = nivel.getEnemigos().stream().allMatch(enemigo -> !enemigo.estaVivo());
-        boolean todosPersonajesDerrotados = partida.getParty().stream().allMatch(personaje -> !personaje.estaVivo());
-
-        if (todosEnemigosDerrotados) {
-            estado = EstadoCombate.VICTORIA;
-        } else if (todosPersonajesDerrotados) {
-            estado = EstadoCombate.DERROTA;
+        EstadoCombate estado = motorCombate.getEstadoCombate();
+        if (estado != EstadoCombate.EN_CURSO && estado != ultimoEstadoLogueado) {
+            ultimoEstadoLogueado = estado;
+            LOGGER.info("Fin de batalla: " + estado);
         }
         return estado;
     }
 
     public boolean continuarAlSiguienteNivel() {
+        if (resultadoVictoriaPendiente != null) {
+            throw new IllegalStateException("La victoria ya fue procesada; iniciá el siguiente encuentro.");
+        }
         Mapa mapa = obtenerMapaActual();
         Nivel nivel = mapa == null ? null : mapa.getNivelActual();
         if (nivel == null || verificarEstadoCombate() != EstadoCombate.VICTORIA) {
             throw new IllegalStateException("El nivel solo se puede completar después de una victoria.");
         }
-
-        int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(nivel.getEnemigos());
-        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(nivel.getEnemigos());
-        gestorPartida.otorgarExperiencia(experienciaGanada);
-        gestorPartida.getPartidaActual().setInventarioGlobal(itemsGanados);
-        nivel.setCompletado(true);
-        if (mapa.getNivelActual() == null) {
-            gestorPartida.avanzarMapa();
-        }
+        prepararResultadoVictoria();
         return getMapaActual() != null;
+    }
+
+    public ResultadoRecompensaDTO prepararResultadoVictoria() {
+        if (resultadoVictoriaPendiente == null) {
+            if (verificarEstadoCombate() != EstadoCombate.VICTORIA) {
+                throw new IllegalStateException("Sólo se pueden preparar recompensas después de una victoria.");
+            }
+            resultadoVictoriaPendiente = gestorPartida.completarNivelConVictoria();
+            motorCombate = crearMotorCombate();
+        }
+        return convertirResultado(resultadoVictoriaPendiente);
+    }
+
+    private ResultadoRecompensaDTO convertirResultado(ResultadoRecompensa resultado) {
+        return new ResultadoRecompensaDTO(resultado.getExperienciaOtorgada(),
+                nombres(resultado.getObjetosObtenidos()), nombres(resultado.getObjetosIncorporados()),
+                nombres(resultado.getObjetosDescartados()));
+    }
+
+    private List<String> nombres(List<Item> objetos) {
+        List<String> nombres = new ArrayList<>();
+        for (Item objeto : objetos) {
+            nombres.add(objeto.getNombre());
+        }
+        return nombres;
     }
 
     public void resolverDefensa(int indicePersonaje) {
         List<Personaje> party = gestorPartida.getPartidaActual().getParty();
+        if (indicePersonaje < 0 || indicePersonaje >= party.size()) {
+            throw new IllegalArgumentException("Elegí un personaje válido.");
+        }
 
         Personaje personaje = party.get(indicePersonaje);
-
-        personaje.defenderse();
         motorCombate.defensa(personaje);
     }
 }

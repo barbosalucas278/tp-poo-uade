@@ -123,8 +123,8 @@ public class PantallaPreBatalla extends JFrame {
         });
 
         btnIniciarBatalla.addActionListener(e -> {
-            PantallaBatalla inicio = new PantallaBatalla();
-            inicio.setVisible(true);
+            PantallaBatalla batalla = new PantallaBatalla(controller);
+            batalla.setVisible(true);
             this.dispose();
         });
     }

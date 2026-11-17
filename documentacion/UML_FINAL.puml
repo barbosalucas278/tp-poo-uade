@@ -1,0 +1,120 @@
+@startuml UML_FINAL
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package controller {
+  class BatallaController
+  class GuardadoController
+  class CreacionPartyController
+}
+package view.pantallas {
+  class PantallaInicio
+  class PantallaCreacionParty
+  class PantallaGuardado
+  class PantallaPreBatalla
+  class PantallaBatalla
+  class PantallaInventario
+  class PantallaResultadoBatalla
+}
+package model.Combate {
+  class MotorCombate
+  enum EstadoCombate
+}
+package model.partidas {
+  class GestorPartida
+  class Partida
+  class Mapa
+  class Nivel
+  class ResultadoRecompensa
+}
+package model.entidades {
+  abstract class Entidad
+  package personajes {
+    abstract class Personaje
+    class Guerrero
+    class Mago
+    class Arquero
+    class Curador
+    class Hechicero <<legacy>>
+    class Asesino <<legacy>>
+  }
+  package enemigos {
+    abstract class Enemigo
+    class Minion
+    class Estandar
+    class Elite
+    class Jefe
+  }
+}
+package model.objetos {
+  class Inventario
+  abstract class Item
+  abstract class ItemConsumible
+  class ItemEquipable
+  class PocionVida
+  class PocionMana
+  enum TipoObjeto
+  enum TipoItemConsumible
+}
+package model.persistencia {
+  class PartidaMapper
+}
+package helpers.archivos {
+  class GestorArchivos
+}
+
+Entidad <|-- Personaje
+Entidad <|-- Enemigo
+Personaje <|-- Guerrero
+Personaje <|-- Mago
+Personaje <|-- Arquero
+Personaje <|-- Curador
+Mago <|-- Hechicero
+Arquero <|-- Asesino
+Enemigo <|-- Minion
+Enemigo <|-- Estandar
+Enemigo <|-- Elite
+Enemigo <|-- Jefe
+Item <|-- ItemConsumible
+Item <|-- ItemEquipable
+ItemConsumible <|-- PocionVida
+ItemConsumible <|-- PocionMana
+
+Partida "1" *-- "2..4" Personaje : party
+Partida "1" *-- "1" Inventario : inventarioGlobal
+Partida "1" *-- "1..*" Mapa
+Mapa "1" *-- "1..*" Nivel
+Nivel "1" *-- "1..*" Enemigo
+Inventario "1" o-- "0..20" Item : disponibles
+Personaje "1" o-- "0..*" ItemEquipable : equipamiento por slot
+GestorPartida "1" --> "0..1" Partida : partidaActual
+BatallaController --> GestorPartida
+BatallaController *-- MotorCombate
+MotorCombate o-- Personaje
+MotorCombate o-- Enemigo
+MotorCombate --> EstadoCombate : consulta estado unico
+BatallaController --> ResultadoRecompensa
+GestorPartida --> ResultadoRecompensa
+GestorPartida --> PartidaMapper
+GestorPartida --> GestorArchivos
+PantallaPreBatalla --> BatallaController : crea una vez
+PantallaPreBatalla --> PantallaBatalla : entrega controller compartido
+PantallaBatalla --> BatallaController
+PantallaBatalla --> PantallaInventario
+PantallaBatalla --> PantallaResultadoBatalla
+PantallaResultadoBatalla --> PantallaGuardado
+PantallaGuardado --> GuardadoController
+GuardadoController --> GestorPartida
+PantallaCreacionParty --> CreacionPartyController
+PantallaInicio --> PantallaPreBatalla
+
+note right of PantallaBatalla
+  Mantiene un unico Timer Swing.
+  dispose() lo detiene antes de cerrar.
+end note
+note bottom of BatallaController
+  Coordina acciones, DTOs y reconstruccion
+  del motor al avanzar de nivel; consulta
+  el estado que define MotorCombate.
+end note
+@enduml

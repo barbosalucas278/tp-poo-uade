@@ -1,8 +1,11 @@
 package model.entidades.personajes;
 
 import java.util.EnumMap;
+import java.util.Collections;
+import java.util.Map;
 
 import model.entidades.Entidad;
+import model.entidades.enemigos.Enemigo;
 import model.objetos.ItemEquipable;
 import model.objetos.TipoObjeto;
 
@@ -63,11 +66,35 @@ public abstract class Personaje extends Entidad {
     }
 
     public void equiparItem(TipoObjeto tipo, ItemEquipable item) {
+        if (tipo == null || item == null || item.getTipo() != tipo) {
+            throw new IllegalArgumentException("El objeto no es compatible con el slot.");
+        }
+        ItemEquipable anterior = this.equipamiento.get(tipo);
+        if (anterior != null) {
+            anterior.removerBonus(this);
+        }
+        item.aplicarBonus(this);
         this.equipamiento.put(tipo, item);
     }
 
-    public void desequiparItem(TipoObjeto tipo) {
-        this.equipamiento.remove(tipo);
+    public ItemEquipable desequiparItem(TipoObjeto tipo) {
+        ItemEquipable anterior = this.equipamiento.remove(tipo);
+        if (anterior != null) {
+            anterior.removerBonus(this);
+        }
+        return anterior;
+    }
+
+    public Map<TipoObjeto, ItemEquipable> getEquipamiento() {
+        return Collections.unmodifiableMap(equipamiento);
+    }
+
+    /** Asigna durante la carga sin volver a sumar bonificaciones ya persistidas. */
+    public void restaurarEquipamiento(ItemEquipable item) {
+        if (item == null || item.getTipo() == null || equipamiento.containsKey(item.getTipo())) {
+            throw new IllegalArgumentException("El equipamiento restaurado no es válido.");
+        }
+        equipamiento.put(item.getTipo(), item);
     }
 
     public void restaurarProgreso(int nivel, int xpActual, int xpSiguiente) {
@@ -76,7 +103,36 @@ public abstract class Personaje extends Entidad {
         this.experienciaSiguientenivel = xpSiguiente;
     }
 
-    public abstract void usarHabilidadEspecial();
+    public abstract void usarHabilidadEspecial(Entidad objetivo);
+
+    public abstract String getNombreHabilidadEspecial();
+
+    public abstract int getCostoHabilidadEspecial();
+
+    public abstract void validarObjetivoHabilidad(Entidad objetivo);
+
+    public void validarHabilidadDisponible() {
+        validarCostoHabilidad();
+    }
+
+    protected void validarObjetivoVivo(Entidad objetivo) {
+        if (objetivo == null || !objetivo.estaVivo()) {
+            throw new IllegalArgumentException("El objetivo debe estar vivo.");
+        }
+    }
+
+    protected void validarCostoHabilidad() {
+        if (recursoActual < getCostoHabilidadEspecial()) {
+            throw new IllegalArgumentException("No hay recurso suficiente para usar la habilidad.");
+        }
+    }
+
+    protected void validarObjetivoEnemigo(Entidad objetivo) {
+        validarObjetivoVivo(objetivo);
+        if (!(objetivo instanceof Enemigo)) {
+            throw new IllegalArgumentException("La habilidad requiere un enemigo como objetivo.");
+        }
+    }
 
     public abstract String getNombreRecurso();
 

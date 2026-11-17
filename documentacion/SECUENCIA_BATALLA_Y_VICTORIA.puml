@@ -1,0 +1,56 @@
+@startuml SECUENCIA_BATALLA_Y_VICTORIA
+actor Jugador
+participant PantallaPreBatalla as Pre
+participant BatallaController as C
+participant PantallaBatalla as Batalla
+participant "Timer Swing" as Timer
+participant MotorCombate as Motor
+participant PantallaResultadoBatalla as Resultado
+participant GestorPartida as Gestor
+
+Pre -> C: new BatallaController()
+C -> Gestor: getPartidaActual()
+C -> Motor: new MotorCombate(party, enemigos)
+C -> C: log "Inicio de batalla"
+Jugador -> Pre: presiona INICIAR BATALLA
+Pre -> Batalla: new PantallaBatalla(C)
+Batalla -> Batalla: actualizarBatalla(EN_CURSO)
+Batalla -> Timer: start()
+Pre -> Pre: dispose()
+
+loop mientras el combate esta activo
+  Timer -> C: verificarEstadoCombate()
+  C -> Motor: getEstadoCombate()
+  alt actor enemigo
+    Timer -> C: avanzarCombate()
+    C -> Motor: avanzarEnergia()
+    C -> Motor: ejecutarTurnoEnemigo(enemigo)
+  else actor jugador
+    Timer -> Batalla: actualizarBatalla()
+    Batalla -> Timer: stop() mientras espera decision
+    Jugador -> Batalla: selecciona objetivo y presiona Atacar
+    Batalla -> C: resolverAtaque(indicePersonaje, indiceEnemigo)
+    C -> Motor: ataque(personaje, enemigo)
+    Motor --> C: accion finalizada
+    C --> Batalla: true
+    Batalla -> Timer: start()
+  end
+end
+
+Timer -> C: verificarEstadoCombate()
+C -> Motor: getEstadoCombate()
+C --> Timer: VICTORIA
+Timer -> Batalla: actualizarBatalla(VICTORIA)
+Batalla -> Timer: stop()
+Batalla -> Resultado: new PantallaResultadoBatalla(C, VICTORIA)
+Resultado -> C: prepararResultadoVictoria()
+C -> Gestor: completarNivelConVictoria()
+Gestor --> C: ResultadoRecompensa
+C -> Motor: new MotorCombate(siguiente nivel)
+Resultado -> Batalla: dispose()
+
+note over Pre,Batalla
+  El controller se construye una sola vez y se entrega
+  a PantallaBatalla; no se crea un segundo combate.
+end note
+@enduml

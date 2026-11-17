@@ -16,18 +16,21 @@ import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 
 import controller.BatallaController;
-import controller.EstadoCombate;
+import model.Combate.EstadoCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
 import view.componentes.BotonRPG;
@@ -38,6 +41,7 @@ import view.componentes.PanelMarcoDorado;
 
 /** Vista del combate activo y navegación a su resultado. */
 public class PantallaBatalla extends JFrame {
+    private static final Logger LOGGER = Logger.getLogger(PantallaBatalla.class.getName());
 
     private static final Color DORADO = new Color(212, 175, 55);
     private static final Color AMARILLO_TURNO = new Color(255, 220, 55);
@@ -89,18 +93,23 @@ public class PantallaBatalla extends JFrame {
         setContentPane(principal);
 
         inicializarEventos();
-        actualizarBatalla(null);
+        actualizarBatalla(EstadoCombate.EN_CURSO);
         iniciarRelojCombate();
     }
 
     private void iniciarRelojCombate() {
         relojCombate = new Timer(1000, e -> {
-            EstadoCombate estado = controller.verificarEstadoCombate();
-            if (estado == null) {
-                controller.avanzarCombate();
-                estado = controller.verificarEstadoCombate();
+            try {
+                EstadoCombate estado = controller.verificarEstadoCombate();
+                if (estado == EstadoCombate.EN_CURSO) {
+                    controller.avanzarCombate();
+                    estado = controller.verificarEstadoCombate();
+                }
+                actualizarBatalla(estado);
+            } catch (RuntimeException excepcion) {
+                LOGGER.log(Level.SEVERE, "Excepción en el evento del temporizador de batalla", excepcion);
+                relojCombate.stop();
             }
-            actualizarBatalla(estado);
         });
 
         relojCombate.start();
@@ -231,7 +240,22 @@ public class PantallaBatalla extends JFrame {
             boton.setHorizontalTextPosition(SwingConstants.CENTER);
             boton.setVerticalTextPosition(SwingConstants.BOTTOM);
         }
-        boton.setToolTipText("Acción pendiente de implementar");
+        boton.setToolTipText(tooltipDeAccion(tipo));
+    }
+
+    private String tooltipDeAccion(IconoBatalla.Tipo tipo) {
+        switch (tipo) {
+            case ATACAR:
+                return "Atacar al enemigo seleccionado.";
+            case DEFENDER:
+                return "Defender al personaje en turno.";
+            case HABILIDAD:
+                return "Usar la habilidad especial del personaje.";
+            case INVENTARIO:
+                return "Abrir el inventario y usar o equipar un objeto.";
+            default:
+                return "Acción de combate.";
+        }
     }
 
     private void inicializarEventos() {
@@ -251,7 +275,7 @@ public class PantallaBatalla extends JFrame {
             limpiarSeleccion();
             actualizarBatalla();
         });
-        btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
+        btnHabilidadPrincipal.addActionListener(e -> resolverHabilidadSeleccionada());
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");
         btnInventario.addActionListener(e -> abrirInventario());
@@ -305,7 +329,7 @@ public class PantallaBatalla extends JFrame {
         if (resultadoMostrado) {
             return;
         }
-        if (estado != null) {
+        if (estado != EstadoCombate.EN_CURSO) {
             resultadoMostrado = true;
             if (relojCombate != null) {
                 relojCombate.stop();
@@ -340,8 +364,24 @@ public class PantallaBatalla extends JFrame {
         lblEstado.setText(mapa == null ? "Iniciá una partida desde el menú para entrar en batalla."
                 : personajeSeleccionado == null ? "La energía avanza. Esperá tu próximo turno."
                         : "Turno de " + personajeSeleccionado.getNombre() + ": atacá o usá una poción del inventario.");
+        actualizarRelojSegunTurno();
         revalidate();
         repaint();
+    }
+
+    private void actualizarRelojSegunTurno() {
+        if (relojCombate == null || resultadoMostrado) {
+            return;
+        }
+        if (indicePersonajeEnTurno >= 0) {
+            if (relojCombate.isRunning()) {
+                relojCombate.stop();
+                LOGGER.info("Pausa del temporizador: decisión del jugador (" + personajeSeleccionado.getNombre() + ")");
+            }
+        } else if (!relojCombate.isRunning()) {
+            relojCombate.start();
+            LOGGER.info("Reanudación del temporizador: esperando siguiente actor.");
+        }
     }
 
     private void cargarCombatientes(List<CombatienteDTO> combatientes, JPanel panel,
@@ -429,13 +469,66 @@ public class PantallaBatalla extends JFrame {
         }
         switch (personajeSeleccionado.getClase()) {
             case "Guerrero":
-                return "Grito de guerra";
-            case "Hechicero":
-                return "Meditar";
-            case "Asesino":
-                return "Sigilo";
+                return "Golpe poderoso";
+            case "Mago":
+                return "Bola de fuego";
+            case "Arquero":
+                return "Disparo certero";
+            case "Curador":
+                return "Curación";
             default:
                 return "Habilidad especial";
+        }
+    }
+
+    private void resolverHabilidadSeleccionada() {
+        int indicePersonaje = indiceSeleccionado(tarjetasParty);
+        if (indicePersonaje < 0) {
+            return;
+        }
+
+        boolean objetivoAliado = "Curador".equals(personajeSeleccionado.getClase());
+        int indiceObjetivo;
+        if (objetivoAliado) {
+            List<CombatienteDTO> party = controller.getPartyActual();
+            String[] opciones = party.stream()
+                    .filter(personaje -> personaje.getVidaActual() > 0)
+                    .map(personaje -> personaje.getNombre() + " (" + personaje.getVidaActual()
+                            + "/" + personaje.getVidaMax() + ")")
+                    .toArray(String[]::new);
+            if (opciones.length == 0) {
+                return;
+            }
+            String seleccion = (String) JOptionPane.showInputDialog(this, "Elegí un aliado vivo",
+                    "Objetivo de " + btnHabilidadPrincipal.getText(), JOptionPane.PLAIN_MESSAGE,
+                    null, opciones, opciones[0]);
+            if (seleccion == null) {
+                return;
+            }
+            indiceObjetivo = -1;
+            for (int i = 0; i < party.size(); i++) {
+                if (party.get(i).getVidaActual() > 0
+                        && seleccion.startsWith(party.get(i).getNombre() + " (")) {
+                    indiceObjetivo = i;
+                    break;
+                }
+            }
+        } else {
+            indiceObjetivo = indiceSeleccionado(tarjetasEnemigos);
+        }
+
+        String motivo = controller.getMotivoNoPuedeUsarHabilidad(indicePersonaje, objetivoAliado, indiceObjetivo);
+        if (motivo != null) {
+            JOptionPane.showMessageDialog(this, motivo, "Habilidad no disponible", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            controller.resolverHabilidad(indicePersonaje, objetivoAliado, indiceObjetivo);
+            limpiarSeleccion();
+            actualizarBatalla();
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Habilidad no disponible",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 

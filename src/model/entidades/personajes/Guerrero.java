@@ -1,12 +1,10 @@
 package model.entidades.personajes;
 
+import model.entidades.Entidad;
+
 public class Guerrero extends Personaje {
     private static final String NOMBRE_RECURSO = "FURIA";
     private int fuerza;
-
-    public int getFuerza() {
-        return fuerza;
-    }
 
     public Guerrero(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
             String rutaImagen) {
@@ -15,12 +13,26 @@ public class Guerrero extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
-        this.GritoDeGuerra();
+    public void usarHabilidadEspecial(Entidad objetivo) {
+        validarObjetivoEnemigo(objetivo);
+        validarCostoHabilidad();
+        objetivo.recibirDanio(ataqueBase + 10);
+        consumirRecursos(getCostoHabilidadEspecial());
     }
 
-    private void GritoDeGuerra() {
-        // Implementación de la habilidad especial del Guerrero
+    @Override
+    public String getNombreHabilidadEspecial() {
+        return "Golpe poderoso";
+    }
+
+    @Override
+    public int getCostoHabilidadEspecial() {
+        return 20;
+    }
+
+    @Override
+    public void validarObjetivoHabilidad(Entidad objetivo) {
+        validarObjetivoEnemigo(objetivo);
     }
 
     @Override
@@ -35,9 +47,9 @@ public class Guerrero extends Personaje {
 
     @Override
     public void aumentarEstadisticasDeClase() {
-        this.ataqueBase += 2;
-        this.defensaBase += 1;
-        this.fuerza += 4;
-        this.vidaMax += 20;
+        ataqueBase += 2;
+        defensaBase += 1;
+        fuerza += 4;
+        vidaMax += 20;
     }
 }

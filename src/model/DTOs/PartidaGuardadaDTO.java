@@ -15,6 +15,7 @@ public class PartidaGuardadaDTO {
     public String nombre;
     public List<PersonajeGuardado> party = new ArrayList<>();
     public List<ItemGuardado> inventario = new ArrayList<>();
+    public List<EquipamientoGuardado> equipamiento = new ArrayList<>();
     public List<ConsumibleGuardado> consumibles = new ArrayList<>();
     public List<MapaGuardado> mapas = new ArrayList<>();
 
@@ -38,6 +39,10 @@ public class PartidaGuardadaDTO {
         public TipoObjeto tipo;
         public int bonusAtaque;
         public int bonusDefensa;
+    }
+
+    public static class EquipamientoGuardado extends ItemGuardado {
+        public int indicePersonaje;
     }
 
     public static class ConsumibleGuardado {

@@ -44,11 +44,11 @@ public class PantallaCreacionParty extends JFrame {
     private JLabel lblVidaVal, lblAtaqueVal, lblDefensaVal;
     
     // Variables de selección
-    private String claseSeleccionada = "Guerrero"; // "Guerrero", "Asesino", "Maga"
+    private String claseSeleccionada = "Guerrero";
     private String generoSeleccionado = "Hombre";   // "Hombre", "Mujer"
 
     // Botones con estado activo
-    private BotonRPG btnGuerrero, btnAsesino, btnHechicero;
+    private BotonRPG btnGuerrero, btnMago, btnArquero, btnCurador;
     private BotonRPG btnHombre, btnMujer;
 
     private JLabel lblAvatar;
@@ -216,19 +216,22 @@ public class PantallaCreacionParty extends JFrame {
 
         // 2. Selección de Clase
         JPanel panelClase = new PanelMarcoDorado("CLASE");
-        panelClase.setLayout(new GridLayout(1, 3, 6, 0));
+        panelClase.setLayout(new GridLayout(1, 4, 6, 0));
 
         btnGuerrero = new BotonRPG("Guerrero");
-        btnAsesino = new BotonRPG("Asesino");
-        btnHechicero = new BotonRPG("Hechicero");
+        btnMago = new BotonRPG("Mago");
+        btnArquero = new BotonRPG("Arquero");
+        btnCurador = new BotonRPG("Curador");
 
         btnGuerrero.addActionListener(e -> seleccionarClase("Guerrero"));
-        btnAsesino.addActionListener(e -> seleccionarClase("Asesino"));
-        btnHechicero.addActionListener(e -> seleccionarClase("Hechicero"));
+        btnMago.addActionListener(e -> seleccionarClase("Mago"));
+        btnArquero.addActionListener(e -> seleccionarClase("Arquero"));
+        btnCurador.addActionListener(e -> seleccionarClase("Curador"));
 
         panelClase.add(btnGuerrero);
-        panelClase.add(btnAsesino);
-        panelClase.add(btnHechicero);
+        panelClase.add(btnMago);
+        panelClase.add(btnArquero);
+        panelClase.add(btnCurador);
 
         gbc.gridy = 1;
         gbc.weighty = 0.30;
@@ -241,8 +244,9 @@ public class PantallaCreacionParty extends JFrame {
     private void seleccionarClase(String clase) {
         this.claseSeleccionada = clase;
         btnGuerrero.setSeleccionado(clase.equals("Guerrero"));
-        btnAsesino.setSeleccionado(clase.equals("Asesino"));
-        btnHechicero.setSeleccionado(clase.equals("Hechicero"));
+        btnMago.setSeleccionado(clase.equals("Mago"));
+        btnArquero.setSeleccionado(clase.equals("Arquero"));
+        btnCurador.setSeleccionado(clase.equals("Curador"));
         actualizarAtributos();
         actualizarAvatar();
     }
@@ -374,7 +378,7 @@ public class PantallaCreacionParty extends JFrame {
             return;
         }
 
-        String claseTexto = claseSeleccionada.equals("Hechicera") ? "Hechicero" : claseSeleccionada;
+        String claseTexto = claseSeleccionada;
         String claseVisible = obtenerClaseVisible(claseTexto);
         nombresPersonajesSlots[slotSeleccionado] = nombre + " - " + claseVisible;
 
@@ -395,6 +399,12 @@ public class PantallaCreacionParty extends JFrame {
                 return "Asesina";
             case "Hechicero":
                 return "Hechicera";
+            case "Mago":
+                return "Maga";
+            case "Arquero":
+                return "Arquera";
+            case "Curador":
+                return "Curadora";
             default:
                 return clase;
         }

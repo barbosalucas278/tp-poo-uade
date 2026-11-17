@@ -1,5 +1,7 @@
 package model.partidas;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import model.entidades.enemigos.Enemigo;
@@ -13,8 +15,11 @@ public class Nivel {
     private boolean completado;
 
     public Nivel(int numeroNivel, List<Enemigo> enemigos) {
+        if (enemigos == null || enemigos.isEmpty() || enemigos.stream().anyMatch(enemigo -> enemigo == null)) {
+            throw new IllegalArgumentException("El nivel debe tener enemigos válidos.");
+        }
         this.numeroNivel = numeroNivel;
-        this.enemigos = enemigos;
+        this.enemigos = new ArrayList<>(enemigos);
         this.completado = false;
     }
 
@@ -23,7 +28,7 @@ public class Nivel {
     }
 
     public List<Enemigo> getEnemigos() {
-        return enemigos;
+        return Collections.unmodifiableList(enemigos);
     }
 
     public boolean isCompletado() {

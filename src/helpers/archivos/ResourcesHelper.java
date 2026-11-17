@@ -11,12 +11,15 @@ public class ResourcesHelper {
         boolean mujer = "Mujer".equals(genero);
         switch (clase) {
             case "Maga":
+            case "Mago":
+            case "Curador":
             case "Hechicera":
             case "Hechicero":
                 return mujer
                         ? "/resources/images/personajes/MagaLesviana.png"
                         : "/resources/images/personajes/MagoLesviano.png";
             case "Asesino":
+            case "Arquero":
                 return mujer
                         ? "/resources/images/personajes/AsesinaMujer.png"
                         : "/resources/images/personajes/AsesinoHombre.png";

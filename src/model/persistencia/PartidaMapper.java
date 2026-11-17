@@ -6,6 +6,7 @@ import java.util.List;
 import model.DTOs.PartidaGuardadaDTO;
 import model.DTOs.PartidaGuardadaDTO.ConsumibleGuardado;
 import model.DTOs.PartidaGuardadaDTO.EnemigoGuardado;
+import model.DTOs.PartidaGuardadaDTO.EquipamientoGuardado;
 import model.DTOs.PartidaGuardadaDTO.ItemGuardado;
 import model.DTOs.PartidaGuardadaDTO.MapaGuardado;
 import model.DTOs.PartidaGuardadaDTO.NivelGuardado;
@@ -64,6 +65,20 @@ public class PartidaMapper {
                 c.tipo = consumible.getTipo();
                 c.rareza = consumible.getRareza();
                 snapshot.consumibles.add(c);
+            }
+        }
+
+        for (int indicePersonaje = 0; indicePersonaje < partida.getParty().size(); indicePersonaje++) {
+            Personaje personaje = partida.getParty().get(indicePersonaje);
+            for (ItemEquipable equipable : personaje.getEquipamiento().values()) {
+                EquipamientoGuardado e = new EquipamientoGuardado();
+                e.indicePersonaje = indicePersonaje;
+                e.nombre = equipable.getNombre();
+                e.descripcion = equipable.getDescripcion();
+                e.tipo = equipable.getTipo();
+                e.bonusAtaque = equipable.getBonusAtaque();
+                e.bonusDefensa = equipable.getBonusDefensa();
+                snapshot.equipamiento.add(e);
             }
         }
 
@@ -131,6 +146,15 @@ public class PartidaMapper {
         for (ItemGuardado i : snapshot.inventario) {
             partida.getInventarioGlobal().agregarItem(
                     new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa));
+        }
+
+        for (EquipamientoGuardado e : snapshot.equipamiento) {
+            if (e.indicePersonaje < 0 || e.indicePersonaje >= party.size()) {
+                throw new IllegalArgumentException("El personaje del equipamiento no es válido.");
+            }
+            ItemEquipable equipable = new ItemEquipable(e.nombre, e.descripcion, e.tipo,
+                    e.bonusAtaque, e.bonusDefensa);
+            partida.restaurarEquipamiento(party.get(e.indicePersonaje), equipable);
         }
 
         for (ConsumibleGuardado c : snapshot.consumibles) {

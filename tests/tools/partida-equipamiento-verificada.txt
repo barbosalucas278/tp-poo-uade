@@ -1,0 +1,9 @@
+PARTIDA|Prueba equipamiento reproducible
+PERSONAJE|GUERRERO|Guerrero de prueba||200|50|51|15|20|1|0|100
+PERSONAJE|MAGO|Mago de apoyo||100|100|35|5|30|1|0|100
+ITEM|Espada de prueba|Arma para equipar inicialmente|ARMA|7|0
+EQUIPADO|0|Hacha de prueba|Arma para reemplazar la espada|ARMA|11|0
+CONSUMIBLE|POCION_MANA|COMUN
+MAPA|1|false
+NIVEL|1|false
+ENEMIGO|SLIME|1|40

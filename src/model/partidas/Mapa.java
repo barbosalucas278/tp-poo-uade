@@ -1,5 +1,7 @@
 package model.partidas;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -11,13 +13,16 @@ public class Mapa {
     private boolean completado;
 
     public Mapa(int numeroMapa, List<Nivel> niveles) {
+        if (niveles == null || niveles.isEmpty() || niveles.stream().anyMatch(nivel -> nivel == null)) {
+            throw new IllegalArgumentException("El mapa debe tener niveles válidos.");
+        }
         this.numeroMapa = numeroMapa;
-        this.niveles = niveles;
+        this.niveles = new ArrayList<>(niveles);
         this.completado = false;
     }
 
     public List<Nivel> getNiveles() {
-        return niveles;
+        return Collections.unmodifiableList(niveles);
     }
 
     public int getNumeroMapa() {

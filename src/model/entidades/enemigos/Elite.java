@@ -1,5 +1,8 @@
 package model.entidades.enemigos;
 
+import java.util.List;
+import model.entidades.personajes.Personaje;
+
 /**
  * Orco
  */
@@ -17,5 +20,12 @@ public class Elite extends Enemigo {
     @Override
     public TipoEnemigo getTipo() {
         return TipoEnemigo.ORCO;
+    }
+
+    @Override
+    public Personaje seleccionarObjetivo(List<Personaje> party) {
+        return objetivosValidos(party).stream()
+                .max((primero, segundo) -> Integer.compare(primero.getAtaqueBase(), segundo.getAtaqueBase()))
+                .get();
     }
 }

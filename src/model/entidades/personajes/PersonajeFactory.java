@@ -19,9 +19,10 @@ public class PersonajeFactory {
                         stats.getVelocidad(),
                         rutaImagen);
 
+            case TipoPersonaje.MAGO:
             case TipoPersonaje.HECHICERO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.HECHICERO);
-                return new Hechicero(
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.MAGO);
+                return new Mago(
                         nombre,
                         stats.getVida(),
                         stats.getRecursoMax(),
@@ -30,9 +31,21 @@ public class PersonajeFactory {
                         stats.getVelocidad(),
                         rutaImagen);
 
+            case TipoPersonaje.ARQUERO:
             case TipoPersonaje.ASESINO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ASESINO);
-                return new Asesino(
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ARQUERO);
+                return new Arquero(
+                        nombre,
+                        stats.getVida(),
+                        stats.getRecursoMax(),
+                        stats.getAtaque(),
+                        stats.getDefensa(),
+                        stats.getVelocidad(),
+                        rutaImagen);
+
+            case TipoPersonaje.CURADOR:
+                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.CURADOR);
+                return new Curador(
                         nombre,
                         stats.getVida(),
                         stats.getRecursoMax(),

@@ -21,6 +21,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 
@@ -28,6 +29,7 @@ import controller.BatallaController;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.ItemInventarioDTO;
 import model.objetos.TipoRareza;
+import model.objetos.TipoObjeto;
 import view.componentes.BotonRPG;
 import view.componentes.PanelMarcoDorado;
 
@@ -50,6 +52,8 @@ public class PantallaInventario extends JDialog {
     private final JTextArea descripcion = texto(0);
     private final JTextArea mensaje = texto(2);
     private final BotonRPG btnUsar = new BotonRPG("USAR Y TERMINAR TURNO");
+    private final BotonRPG btnEquipar = new BotonRPG("EQUIPAR Y TERMINAR TURNO");
+    private final BotonRPG btnDesequipar = new BotonRPG("DESEQUIPAR Y TERMINAR TURNO");
     private final BotonRPG btnCancelar = new BotonRPG("CANCELAR");
     private boolean accionRealizada;
     private String mensajeAccion;
@@ -103,7 +107,12 @@ public class PantallaInventario extends JDialog {
         acciones.setOpaque(false);
         btnCancelar.setPreferredSize(new Dimension(155, 42));
         btnUsar.setPreferredSize(new Dimension(310, 42));
+        JPanel cambios = new JPanel(new GridLayout(1, 2, 8, 0));
+        cambios.setOpaque(false);
+        cambios.add(btnEquipar);
+        cambios.add(btnDesequipar);
         acciones.add(btnCancelar, BorderLayout.WEST);
+        acciones.add(cambios, BorderLayout.CENTER);
         acciones.add(btnUsar, BorderLayout.EAST);
         pie.add(acciones, BorderLayout.SOUTH);
         principal.add(pie, BorderLayout.SOUTH);
@@ -175,6 +184,8 @@ public class PantallaInventario extends JDialog {
             }
         });
         btnUsar.addActionListener(e -> usarSeleccion());
+        btnEquipar.addActionListener(e -> equiparSeleccion());
+        btnDesequipar.addActionListener(e -> desequiparSeleccion());
         btnCancelar.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(btnUsar);
         getRootPane().registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
@@ -203,6 +214,11 @@ public class PantallaInventario extends JDialog {
                     ? "Podés obtener pociones al ganar niveles. Cuando tengas objetos, aparecerán en esta lista."
                     : "Seleccioná un objeto para consultar su efecto.");
             btnUsar.setEnabled(false);
+            btnUsar.setVisible(false);
+            btnEquipar.setEnabled(false);
+            btnEquipar.setVisible(false);
+            btnDesequipar.setEnabled(!controller.getSlotsEquipados(indicePersonaje).isEmpty());
+            btnDesequipar.setVisible(true);
             mostrarMensaje("Podés cerrar el inventario y conservar tu turno.", false);
             return;
         }
@@ -214,7 +230,14 @@ public class PantallaInventario extends JDialog {
         descripcion.setCaretPosition(0);
         String motivo = controller.getMotivoNoPuedeUsarItem(indicePersonaje, item.getIndice());
         btnUsar.setEnabled(motivo == null);
+        boolean equipable = !item.isConsumible();
+        String motivoEquipar = equipable ? controller.getMotivoNoPuedeEquiparItem(indicePersonaje, item.getIndice()) : null;
+        btnEquipar.setEnabled(motivoEquipar == null);
+        btnDesequipar.setEnabled(!controller.getSlotsEquipados(indicePersonaje).isEmpty());
+        btnUsar.setVisible(item.isConsumible());
+        btnEquipar.setVisible(equipable);
         btnUsar.setToolTipText(motivo);
+        btnEquipar.setToolTipText(motivoEquipar);
         mostrarMensaje(motivo == null
                 ? "Al confirmar se consume el objeto y termina el turno del personaje activo."
                 : motivo, motivo != null);
@@ -232,6 +255,45 @@ public class PantallaInventario extends JDialog {
             controller.resolverUsoItem(indicePersonaje, item.getIndice());
             accionRealizada = true;
             mensajeAccion = item.getNombre() + " aplicada a " + personajeEnTurno.getNombre() + ". Turno finalizado.";
+            dispose();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mostrarMensaje(e.getMessage(), true);
+        }
+    }
+
+    private void equiparSeleccion() {
+        ItemInventarioDTO item = listaItems.getSelectedValue();
+        if (item == null) {
+            return;
+        }
+        try {
+            controller.resolverEquiparItem(indicePersonaje, item.getIndice());
+            accionRealizada = true;
+            mensajeAccion = item.getNombre() + " equipado en " + personajeEnTurno.getNombre() + ". Turno finalizado.";
+            dispose();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mostrarMensaje(e.getMessage(), true);
+        }
+    }
+
+    private void desequiparSeleccion() {
+        List<TipoObjeto> slots = controller.getSlotsEquipados(indicePersonaje);
+        if (slots.isEmpty()) {
+            return;
+        }
+        String[] opciones = new String[slots.size()];
+        for (int i = 0; i < slots.size(); i++) {
+            opciones[i] = slots.get(i).name();
+        }
+        String elegido = (String) JOptionPane.showInputDialog(this, "Elegí el slot a desequipar:",
+                "Desequipar", JOptionPane.PLAIN_MESSAGE, null, opciones, opciones[0]);
+        if (elegido == null) {
+            return;
+        }
+        try {
+            controller.resolverDesequiparItem(indicePersonaje, TipoObjeto.valueOf(elegido));
+            accionRealizada = true;
+            mensajeAccion = "Objeto desequipado. Turno finalizado.";
             dispose();
         } catch (IllegalArgumentException | IllegalStateException e) {
             mostrarMensaje(e.getMessage(), true);
@@ -295,6 +357,14 @@ public class PantallaInventario extends JDialog {
 
     public BotonRPG getBtnUsar() {
         return btnUsar;
+    }
+
+    public BotonRPG getBtnEquipar() {
+        return btnEquipar;
+    }
+
+    public BotonRPG getBtnDesequipar() {
+        return btnDesequipar;
     }
 
     public BotonRPG getBtnCancelar() {

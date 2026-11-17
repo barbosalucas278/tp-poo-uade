@@ -1,5 +1,8 @@
 package model.entidades.enemigos;
 
+import java.util.List;
+import model.entidades.personajes.Personaje;
+
 /**
  * Esqueleto
  */
@@ -17,5 +20,12 @@ public class Estandar extends Enemigo {
     @Override
     public TipoEnemigo getTipo() {
         return TipoEnemigo.ESQUELETO;
+    }
+
+    @Override
+    public Personaje seleccionarObjetivo(List<Personaje> party) {
+        return objetivosValidos(party).stream()
+                .min((primero, segundo) -> Integer.compare(primero.getVidaActual(), segundo.getVidaActual()))
+                .get();
     }
 }

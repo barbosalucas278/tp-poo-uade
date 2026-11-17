@@ -1,0 +1,57 @@
+@startuml SECUENCIA_EQUIPAMIENTO_GUARDADO_CARGA
+actor Jugador
+participant PantallaBatalla as Batalla
+participant PantallaInventario as InventarioUI
+participant BatallaController as C
+participant MotorCombate as Motor
+participant Partida
+participant Inventario as InventarioModelo
+participant Personaje
+participant PantallaResultadoBatalla as Resultado
+participant PantallaGuardado as GuardadoUI
+participant GuardadoController as GuardadoC
+participant GestorPartida as Gestor
+participant PartidaMapper as Mapper
+participant GestorArchivos as Archivos
+
+Jugador -> Batalla: presiona Abrir inventario
+Batalla -> InventarioUI: new PantallaInventario(Batalla, C, indice)
+Jugador -> InventarioUI: selecciona equipable y confirma EQUIPAR
+InventarioUI -> C: resolverEquiparItem(indice, item)
+C -> Motor: equiparItem(actor, item, Partida)
+Motor -> Partida: equiparItem(actor, item)
+Partida -> InventarioModelo: equiparItem(item, actor)
+InventarioModelo -> Personaje: reemplaza slot y aplica bonus
+InventarioModelo --> Partida: objeto anterior vuelve al inventario
+Motor --> C: finaliza accion y consume turno
+C --> InventarioUI: accion realizada
+InventarioUI -> InventarioUI: dispose()
+
+Jugador -> Resultado: presiona GUARDAR PARTIDA tras victoria
+Resultado -> C: prepararResultadoVictoria()
+C -> Gestor: completarNivelConVictoria()
+Resultado -> GuardadoUI: new PantallaGuardado(true, Resultado)
+Jugador -> GuardadoUI: selecciona slot
+GuardadoUI -> GuardadoC: guardarPartidaActual(slot)
+GuardadoC -> Gestor: guardarPartidaActual(slot)
+Gestor -> Mapper: aSnapshot(Partida)
+Gestor -> Archivos: guardar(snapshot, slot)
+Archivos --> GuardadoC: true
+
+Jugador -> GuardadoUI: selecciona CARGAR y el mismo slot
+GuardadoUI -> GuardadoC: cargarPartida(slot)
+GuardadoC -> Gestor: cargarPartidaExistente(slot)
+Gestor -> Archivos: cargar(slot)
+Archivos --> Gestor: snapshot
+Gestor -> Mapper: desdeSnapshot(snapshot)
+Mapper -> Personaje: restaura estadisticas guardadas
+Mapper -> Partida: restaura EQUIPADO por indice y slot
+Mapper --> Gestor: Partida cargada
+Gestor --> GuardadoC: PARTIDA_CARGADA
+GuardadoC --> GuardadoUI: estado de carga
+
+note over Mapper,Personaje
+  Las estadisticas guardadas ya incluyen el bonus.
+  restaurarEquipamiento reconstruye el slot sin volver a sumarlo.
+end note
+@enduml

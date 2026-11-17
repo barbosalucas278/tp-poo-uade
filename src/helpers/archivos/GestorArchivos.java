@@ -15,6 +15,7 @@ import model.DTOs.PartidaGuardadaDTO;
 import model.DTOs.PartidaGuardadaDTO.ConsumibleGuardado;
 import model.DTOs.PartidaGuardadaDTO.EnemigoGuardado;
 import model.DTOs.PartidaGuardadaDTO.ItemGuardado;
+import model.DTOs.PartidaGuardadaDTO.EquipamientoGuardado;
 import model.DTOs.PartidaGuardadaDTO.MapaGuardado;
 import model.DTOs.PartidaGuardadaDTO.NivelGuardado;
 import model.DTOs.PartidaGuardadaDTO.PersonajeGuardado;
@@ -52,9 +53,16 @@ public class GestorArchivos {
     }
 
     public static boolean guardar(PartidaGuardadaDTO partida, String slot) {
+        return guardarEnArchivo(partida, ruta(slot));
+    }
+
+    public static boolean guardarEnArchivo(PartidaGuardadaDTO partida, Path archivo) {
         try {
-            Files.createDirectories(Paths.get(CARPETA));
-            try (BufferedWriter writer = Files.newBufferedWriter(ruta(slot), StandardCharsets.UTF_8)) {
+            Path padre = archivo.getParent();
+            if (padre != null) {
+                Files.createDirectories(padre);
+            }
+            try (BufferedWriter writer = Files.newBufferedWriter(archivo, StandardCharsets.UTF_8)) {
                 escribir(writer, partida);
             }
             return true;
@@ -68,7 +76,14 @@ public class GestorArchivos {
         if (!existe(slot)) {
             return null;
         }
-        try (BufferedReader reader = Files.newBufferedReader(ruta(slot), StandardCharsets.UTF_8)) {
+        return cargarArchivo(ruta(slot));
+    }
+
+    public static PartidaGuardadaDTO cargarArchivo(Path archivo) {
+        if (archivo == null || !Files.exists(archivo)) {
+            return null;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
             return leer(reader);
         } catch (Exception e) { // IOException, o NumberFormatException/IllegalArgumentException si el archivo está corrupto
             e.printStackTrace();
@@ -88,6 +103,11 @@ public class GestorArchivos {
         for (ItemGuardado item : partida.inventario) {
             escribirLinea(writer, "ITEM", item.nombre, item.descripcion, item.tipo, item.bonusAtaque,
                     item.bonusDefensa);
+        }
+
+        for (EquipamientoGuardado item : partida.equipamiento) {
+            escribirLinea(writer, "EQUIPADO", item.indicePersonaje, item.nombre, item.descripcion,
+                    item.tipo, item.bonusAtaque, item.bonusDefensa);
         }
 
         for (ConsumibleGuardado consumible : partida.consumibles) {
@@ -146,6 +166,17 @@ public class GestorArchivos {
                     item.bonusAtaque = Integer.parseInt(campos[4]);
                     item.bonusDefensa = Integer.parseInt(campos[5]);
                     partida.inventario.add(item);
+                    break;
+
+                case "EQUIPADO":
+                    EquipamientoGuardado equipado = new EquipamientoGuardado();
+                    equipado.indicePersonaje = Integer.parseInt(campos[1]);
+                    equipado.nombre = campos[2];
+                    equipado.descripcion = campos[3];
+                    equipado.tipo = TipoObjeto.valueOf(campos[4]);
+                    equipado.bonusAtaque = Integer.parseInt(campos[5]);
+                    equipado.bonusDefensa = Integer.parseInt(campos[6]);
+                    partida.equipamiento.add(equipado);
                     break;
 
                 case "CONSUMIBLE":
