@@ -16,23 +16,23 @@ public class ResourcesHelper {
                         : "/resources/images/personajes/ArqueroHombre.jpg";
             case "Asesino":
                 return mujer
-                        ? "/resources/images/personajes/AsesinaMujer.png"
-                        : "/resources/images/personajes/AsesinoHombre.png";
+                        ? "/resources/images/personajes/AsesinaMujer.jpg"
+                        : "/resources/images/personajes/AsesinoHombre.jpg";
             case "Curador":
                 return mujer
                         ? "/resources/images/personajes/CuradoraMujer.jpg"
                         : "/resources/images/personajes/CuradorHombre.jpg";
             case "Guerrero":
                 return mujer
-                        ? "/resources/images/personajes/GuerreroMujer.png"
-                        : "/resources/images/personajes/GuerreroHombre.png";
+                        ? "/resources/images/personajes/GuerreroMujer.jpg"
+                        : "/resources/images/personajes/GuerreroHombre.jpg";
             case "Invocador":
                 return mujer
                         ? "/resources/images/personajes/InvocadoraMujer.jpg"
                         : "/resources/images/personajes/InvocadorHombre.jpg";
             case "Mago":
                 return mujer
-                        ? "/resources/images/personajes/MagaLesviana.png"
+                        ? "/resources/images/personajes/MagaLesviana.jpg"
                         : "/resources/images/personajes/MagoLesviano.jpg";
             
             default:
