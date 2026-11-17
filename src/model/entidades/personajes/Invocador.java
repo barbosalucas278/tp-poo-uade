@@ -11,8 +11,9 @@ public class Invocador extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
+    public int usarHabilidadEspecial() {
         invocarCriatura();
+        return 0;
     }
 
     private void invocarCriatura() {

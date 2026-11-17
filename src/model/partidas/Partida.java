@@ -1,35 +1,78 @@
 package model.partidas;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
 import model.objetos.Item;
 
 /**
- * Partida
+ * Representa una partida en curso dentro del juego.
+ * <p>Gestiona el nombre de la sesión, el equipo de personajes activos (mínimo {@value #CANTIDAD_MINIMA_PERSONAJES}),
+ * el inventario compartido y la progresión de mapas.</p>
  */
 public class Partida {
+
+    public static final int CANTIDAD_MINIMA_PERSONAJES = 2;
 
     private String nombre;
     private List<Personaje> party;
     private Inventario inventarioGlobal;
     private List<Mapa> mapas;
 
+    /**
+     * Crea una nueva partida inicializando el inventario global y agregando el mapa inicial.
+     *
+     * @param nombre Nombre identificador de la partida.
+     * @param party  Lista inicial de personajes (debe contener al menos 2 personajes no nulos).
+     * @param mapa   Mapa inicial donde comienza la aventura.
+     */
     public Partida(String nombre, List<Personaje> party, Mapa mapa) {
+        validarCantidadMinimaPersonajes(party);
         this.nombre = nombre;
-        this.party = party;
+        this.party = new ArrayList<>(party);
         this.inventarioGlobal = new Inventario();
         this.mapas = new ArrayList<Mapa>();
         this.mapas.add(mapa);
     }
 
+    /**
+     * Valida que la lista de personajes cumpla con el mínimo requerido y no contenga referencias nulas.
+     *
+     * @param party Lista de personajes a verificar.
+     */
+    static void validarCantidadMinimaPersonajes(List<Personaje> party) {
+        if (party == null || party.size() < CANTIDAD_MINIMA_PERSONAJES || party.contains(null)) {
+            throw new IllegalArgumentException("La party debe tener al menos dos personajes.");
+        }
+    }
+
+    /**
+     * Agrega un personaje a la party actual.
+     *
+     * @param personaje Personaje a incorporar al equipo.
+     */
     public void agregarPersonaje(Personaje personaje) {
         party.add(personaje);
     }
 
+    /**
+     * Remueve un personaje existente de la party.
+     *
+     * @param personaje Personaje a quitar del equipo.
+     */
     public void removerPersonaje(Personaje personaje) {
         party.remove(personaje);
+    }
+
+    /**
+     * Agrega un nuevo mapa a la lista de mapas de la partida.
+     *
+     * @param mapa Mapa a registrar.
+     */
+    public void agregarMapa(Mapa mapa) {
+        mapas.add(mapa);
     }
 
     public Inventario getInventarioGlobal() {
@@ -58,15 +101,11 @@ public class Partida {
     }
 
     public List<Personaje> getParty() {
-        return party;
+        return Collections.unmodifiableList(party);
     }
 
     public List<Mapa> getMapas() {
         return mapas;
-    }
-
-    public void agregarMapa(Mapa mapa) {
-        mapas.add(mapa);
     }
 
 }

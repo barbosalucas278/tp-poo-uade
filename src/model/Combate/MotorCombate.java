@@ -60,6 +60,19 @@ public class MotorCombate {
         finalizarAccion(atacante);
     }
 
+    public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
+        if (atacante != actorActual) {
+            throw new IllegalStateException("No es el turno del personaje.");
+        }
+        if (objetivo == null || !participantes.contains(objetivo) || !objetivo.estaVivo()) {
+            throw new IllegalArgumentException("Elegí un objetivo válido que siga en combate.");
+        }
+
+        int danio = atacante.usarHabilidadEspecial();
+        objetivo.recibirDanio(danio);
+        finalizarAccion(atacante);
+    }
+
     public void defensa(Entidad personaje) {
 
         finalizarAccion(personaje);

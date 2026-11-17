@@ -2,8 +2,19 @@ package model.entidades.personajes;
 
 public class Arquero extends Personaje {
     private static final String NOMBRE_RECURSO = "CONCENTRACION";
+    private static final int COSTO_DISPARO_CERTERO = 60;
     private int punteria;
 
+    /**
+     * 
+     * @param nombre
+     * @param vidaMax
+     * @param recursoMax
+     * @param ataqueBase
+     * @param defensaBase
+     * @param velocidad
+     * @param rutaImagen
+     */
     public Arquero(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
             String rutaImagen) {
         super(nombre, vidaMax, recursoMax, ataqueBase, defensaBase, velocidad, rutaImagen, NOMBRE_RECURSO);
@@ -11,11 +22,18 @@ public class Arquero extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
-        disparoCertero();
+    public int usarHabilidadEspecial() {
+        return disparoCertero();
     }
 
-    private void disparoCertero() {
+    private int disparoCertero() {
+        if (getRecursoActual() < COSTO_DISPARO_CERTERO) {
+            throw new IllegalStateException("No hay sufiente concetracion para usar Disparo Certero");
+        }
+
+        int danio = (int) Math.round(atacar() * 1.50);
+        consumirRecursos(COSTO_DISPARO_CERTERO);
+        return danio;
     }
 
     @Override

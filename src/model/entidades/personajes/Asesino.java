@@ -15,12 +15,12 @@ public class Asesino extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
-        this.sigilo();
+    public int usarHabilidadEspecial() {
+        return dagaMortal();
     }
 
-    private void sigilo() {
-        // Implementación de la habilidad especial del Asesino
+    private int dagaMortal() {
+        return 0;
     }
 
     @Override

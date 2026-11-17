@@ -41,20 +41,17 @@ public class PantallaCreacionParty extends JFrame {
     private int slotSeleccionado = 0;
 
     private JProgressBar barVida, barAtaque, barDefensa;
-    private JLabel lblVidaVal, lblAtaqueVal, lblDefensaVal;
+    private JLabel lblVidaVal, lblAtaqueVal, lblDefensaVal, lblAvatar;
     
     // Variables de selección
     private String claseSeleccionada = "Guerrero"; //  "Arquero", "Asesino", "Curador", "Guerrero", "Invocador",  "Mago"  
     private String generoSeleccionado = "Hombre";   // "Hombre", "Mujer"
 
     // Botones con estado activo
-    private BotonRPG btnGuerrero, btnAsesino, btnMago, btnCurador, btnArquero, btnInvocador;
-    private BotonRPG btnHombre, btnMujer;
+    private BotonRPG btnGuerrero, btnAsesino, btnMago, btnCurador, btnArquero, btnInvocador, btnVolver, btnJugar, btnBorrar, btnCrear, btnHombre, btnMujer;
 
-    private JLabel lblAvatar;
     private Image imgAvatar; // Guarda la imagen original para dibujarla a pantalla completa en el contenedor
     private JTextField txtNombre;
-    private BotonRPG btnVolver, btnJugar, btnBorrar, btnCrear;
 
     public PantallaCreacionParty() {
         controller = new CreacionPartyController();
@@ -232,12 +229,12 @@ public class PantallaCreacionParty extends JFrame {
         btnInvocador.addActionListener(e -> seleccionarClase("Invocador"));
         btnMago.addActionListener(e -> seleccionarClase("Mago"));
 
-        panelClase.add(btnMago);
-        panelClase.add(btnGuerrero);
-        panelClase.add(btnCurador);
         panelClase.add(btnArquero);
         panelClase.add(btnAsesino);
+        panelClase.add(btnCurador);
+        panelClase.add(btnGuerrero);
         panelClase.add(btnInvocador);
+        panelClase.add(btnMago);
 
         gbc.gridy = 1;
         gbc.weighty = 0.45;
@@ -425,30 +422,24 @@ public class PantallaCreacionParty extends JFrame {
         }
 
         boolean confirmacion = DialogoRPG.confirmar(this, "Confirmar Borrado",
-                "¿Estás seguro de que querés eliminar el personaje del Slot " + (slotSeleccionado + 1) + "?");
+                "¿Estás seguro de que querés eliminar el personaje?");
 
         if (confirmacion) {
             controller.removerPersonaje(slotSeleccionado);
             nombresPersonajesSlots[slotSeleccionado] = null;
             btnSlots[slotSeleccionado].setText("VACÍO");
-            DialogoRPG.mostrarAviso(this, "Slot Vacío", "Personaje eliminado del Slot " + (slotSeleccionado + 1));
+            DialogoRPG.mostrarAviso(this, "Slot Vacío", "Personaje eliminado");
         }
     }
 
     private void iniciarJuego() {
-        int cantidadPersonajes = 0;
-        for (String slot : nombresPersonajesSlots) {
-            if (slot != null) {
-                cantidadPersonajes++;
-            }
-        }
-
-        if (cantidadPersonajes < 2) {
-            DialogoRPG.mostrarAviso(this, "Party Incompleta", "Tenés que crear al menos dos personajes para comenzar la aventura.");
+        try {
+            controller.iniciarJuego();
+        } catch (IllegalArgumentException e) {
+            DialogoRPG.mostrarAviso(this, "Party inválida", e.getMessage());
             return;
         }
 
-        controller.iniciarJuego();
         PantallaPreBatalla preBatalla = new PantallaPreBatalla();
         preBatalla.setVisible(true);
         this.dispose();

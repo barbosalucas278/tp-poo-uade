@@ -76,7 +76,7 @@ public abstract class Personaje extends Entidad {
         this.experienciaSiguientenivel = xpSiguiente;
     }
 
-    public abstract void usarHabilidadEspecial();
+    public abstract int usarHabilidadEspecial();
 
     public abstract String getNombreRecurso();
 

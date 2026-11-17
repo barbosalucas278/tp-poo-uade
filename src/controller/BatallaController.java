@@ -193,6 +193,33 @@ public class BatallaController {
         return true;
     }
 
+    public void resolverHabilidadEspecial(int indicePersonaje, int indiceEnemigo) {
+        Partida partida = gestorPartida.getPartidaActual();
+        Mapa mapa = obtenerMapaActual();
+        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
+        if (partida == null || nivel == null || verificarEstadoCombate() != null) {
+            throw new IllegalStateException("No hay un combate activo para usar habilidades.");
+        }
+
+        List<Personaje> party = partida.getParty();
+        List<Enemigo> enemigos = nivel.getEnemigos();
+        if (indicePersonaje < 0 || indicePersonaje >= party.size()
+                || indiceEnemigo < 0 || indiceEnemigo >= enemigos.size()) {
+            throw new IllegalArgumentException("Seleccioná un personaje y un enemigo.");
+        }
+
+        Personaje personaje = party.get(indicePersonaje);
+        Enemigo enemigo = enemigos.get(indiceEnemigo);
+        if (indicePersonaje != getIndicePersonajeEnTurno() || !personaje.estaVivo()) {
+            throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
+        }
+        if (!enemigo.estaVivo()) {
+            throw new IllegalArgumentException("Elegí un enemigo que siga vivo.");
+        }
+
+        motorCombate.usarHabilidadEspecial(personaje, enemigo);
+    }
+
     public EstadoCombate verificarEstadoCombate() {
         Partida partida = gestorPartida.getPartidaActual();
         Mapa mapa = obtenerMapaActual();

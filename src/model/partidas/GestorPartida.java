@@ -33,7 +33,9 @@ public class GestorPartida {
     }
 
     public Partida nuevaPartida(String nombrePartida, List<Personaje> party) {
-        this.partidaActual = new Partida(nombrePartida, party, generarNuevoMapa(NIVEL_INICIAL));
+        Partida.validarCantidadMinimaPersonajes(party);
+        Partida nuevaPartida = new Partida(nombrePartida, party, generarNuevoMapa(NIVEL_INICIAL));
+        this.partidaActual = nuevaPartida;
         return this.partidaActual;
     }
 

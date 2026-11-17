@@ -251,7 +251,7 @@ public class PantallaBatalla extends JFrame {
             limpiarSeleccion();
             actualizarBatalla();
         });
-        btnHabilidadPrincipal.addActionListener(e -> mostrarAccionPendiente(btnHabilidadPrincipal.getText()));
+        btnHabilidadPrincipal.addActionListener(e -> usarHabilidadPrincipal());
         btnHabilidadSecundaria.setEnabled(false);
         btnHabilidadSecundaria.setToolTipText("Próximamente: segunda habilidad de clase");
         btnInventario.addActionListener(e -> abrirInventario());
@@ -428,12 +428,18 @@ public class PantallaBatalla extends JFrame {
             return "Habilidad especial";
         }
         switch (personajeSeleccionado.getClase()) {
-            case "Guerrero":
-                return "Grito de guerra";
-            case "Mago":
-                return "Meditar";
+            case "Arquero":
+                return "Disparo Certero";
             case "Asesino":
-                return "Sigilo";
+                return "Daga Mortal";
+            case "Curador":
+                return "Sanacion";
+            case "Guerrero":
+                return "Embestida";
+            case "Invocador":
+                return "Alianza Animal";
+            case "Mago":
+                return "Bola de fuego";
             default:
                 return "Habilidad especial";
         }
@@ -441,6 +447,34 @@ public class PantallaBatalla extends JFrame {
 
     private void mostrarAccionPendiente(String accion) {
         lblEstado.setText(accion + ": acción aún no disponible.");
+    }
+
+    private void usarHabilidadPrincipal() {
+        if (personajeSeleccionado == null) {
+            return;
+        }
+
+        String clase = personajeSeleccionado.getClase();
+        if (!"Mago".equals(clase) && !"Arquero".equals(clase)) {
+            mostrarAccionPendiente(btnHabilidadPrincipal.getText());
+            return;
+        }
+
+        String habilidad = btnHabilidadPrincipal.getText();
+        String nombrePersonaje = personajeSeleccionado.getNombre();
+
+        try {
+            controller.resolverHabilidadEspecial(
+                    indiceSeleccionado(tarjetasParty),
+                    indiceSeleccionado(tarjetasEnemigos));
+            limpiarSeleccion();
+            actualizarBatalla();
+            if (!resultadoMostrado) {
+                lblEstado.setText(habilidad + " de " + nombrePersonaje + " ejecutada. Turno finalizado.");
+            }
+        } catch (IllegalArgumentException | IllegalStateException error) {
+            lblEstado.setText(error.getMessage());
+        }
     }
 
     private static JLabel etiqueta(String texto, int tamano, Color color) {

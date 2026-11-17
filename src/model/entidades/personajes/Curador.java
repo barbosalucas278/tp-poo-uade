@@ -11,8 +11,9 @@ public class Curador extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
+    public int usarHabilidadEspecial() {
         sanarAliado();
+        return 0;
     }
 
     private void sanarAliado() {

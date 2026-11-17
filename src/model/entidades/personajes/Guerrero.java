@@ -15,8 +15,9 @@ public class Guerrero extends Personaje {
     }
 
     @Override
-    public void usarHabilidadEspecial() {
+    public int usarHabilidadEspecial() {
         this.GritoDeGuerra();
+        return 0;
     }
 
     private void GritoDeGuerra() {
