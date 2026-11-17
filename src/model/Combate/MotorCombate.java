@@ -10,6 +10,9 @@ import model.objetos.Inventario;
 import model.objetos.ItemConsumible;
 
 public class MotorCombate {
+    // Maná que recupera cada personaje vivo cada vez que se acumula energía
+    private static final int REGENERACION_MANA_POR_TICK = 3;
+
     private final List<Entidad> participantes = new ArrayList<>();
     private Entidad actorActual;
 
@@ -32,6 +35,10 @@ public class MotorCombate {
         for (Entidad entidad : participantes) {
             if (entidad.estaVivo()) {
                 entidad.acumularEnergia(entidad.getVelocidad());
+                // Los personajes recuperan maná de a poco, mucho más lento que la energía
+                if (entidad instanceof Personaje) {
+                    entidad.generarRecursos(REGENERACION_MANA_POR_TICK);
+                }
             }
         }
 
