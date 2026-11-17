@@ -77,6 +77,11 @@ public abstract class Personaje extends Entidad {
     }
 
     public abstract int usarHabilidadEspecial();
+        // Indica si la habilidad especial ayuda al grupo en lugar de dañar a un enemigo.
+        // Por defecto es false; el Curador la sobrescribe y devuelve true.
+        public boolean esHabilidadDeApoyo() {
+         return false;
+    }
 
     public abstract String getNombreRecurso();
 

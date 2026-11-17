@@ -193,26 +193,40 @@ public class BatallaController {
         return true;
     }
 
+      // Recibe la habilidad elegida en la pantalla, valida la selección y la manda al motor
     public void resolverHabilidadEspecial(int indicePersonaje, int indiceEnemigo) {
         Partida partida = gestorPartida.getPartidaActual();
         Mapa mapa = obtenerMapaActual();
         Nivel nivel = mapa == null ? null : mapa.getNivelActual();
+        // Tiene que haber un combate en curso
         if (partida == null || nivel == null || verificarEstadoCombate() != null) {
             throw new IllegalStateException("No hay un combate activo para usar habilidades.");
         }
 
         List<Personaje> party = partida.getParty();
         List<Enemigo> enemigos = nivel.getEnemigos();
-        if (indicePersonaje < 0 || indicePersonaje >= party.size()
-                || indiceEnemigo < 0 || indiceEnemigo >= enemigos.size()) {
-            throw new IllegalArgumentException("Seleccioná un personaje y un enemigo.");
+        // El personaje seleccionado tiene que existir
+        if (indicePersonaje < 0 || indicePersonaje >= party.size()) {
+            throw new IllegalArgumentException("Seleccioná un personaje.");
         }
 
+        // Y tiene que ser su turno y estar vivo
         Personaje personaje = party.get(indicePersonaje);
-        Enemigo enemigo = enemigos.get(indiceEnemigo);
         if (indicePersonaje != getIndicePersonajeEnTurno() || !personaje.estaVivo()) {
             throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
         }
+
+        // Las habilidades de apoyo no necesitan que se elija un enemigo
+        if (personaje.esHabilidadDeApoyo()) {
+            motorCombate.usarHabilidadEspecial(personaje, null);
+            return;
+        }
+
+        // Las habilidades de daño necesitan un enemigo seleccionado y vivo
+        if (indiceEnemigo < 0 || indiceEnemigo >= enemigos.size()) {
+            throw new IllegalArgumentException("Seleccioná un enemigo.");
+        }
+        Enemigo enemigo = enemigos.get(indiceEnemigo);
         if (!enemigo.estaVivo()) {
             throw new IllegalArgumentException("Elegí un enemigo que siga vivo.");
         }

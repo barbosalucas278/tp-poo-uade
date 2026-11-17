@@ -449,14 +449,9 @@ public class PantallaBatalla extends JFrame {
         lblEstado.setText(accion + ": acción aún no disponible.");
     }
 
+        // Usa la habilidad especial del personaje seleccionado y actualiza la pantalla
     private void usarHabilidadPrincipal() {
         if (personajeSeleccionado == null) {
-            return;
-        }
-
-        String clase = personajeSeleccionado.getClase();
-        if (!"Mago".equals(clase) && !"Arquero".equals(clase)) {
-            mostrarAccionPendiente(btnHabilidadPrincipal.getText());
             return;
         }
 
@@ -473,6 +468,7 @@ public class PantallaBatalla extends JFrame {
                 lblEstado.setText(habilidad + " de " + nombrePersonaje + " ejecutada. Turno finalizado.");
             }
         } catch (IllegalArgumentException | IllegalStateException error) {
+            // Si falta recurso o la selección no es válida, muestra el mensaje y no gasta el turno
             lblEstado.setText(error.getMessage());
         }
     }

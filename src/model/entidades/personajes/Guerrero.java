@@ -2,6 +2,9 @@ package model.entidades.personajes;
 
 public class Guerrero extends Personaje {
     private static final String NOMBRE_RECURSO = "FURIA";
+    // Furia que gasta cada vez que usa Embestida
+    private static final int COSTO_EMBESTIDA = 30;
+    // Daño extra que suma en la Embestida; sube al subir de nivel
     private int fuerza;
 
     public int getFuerza() {
@@ -14,14 +17,21 @@ public class Guerrero extends Personaje {
         this.fuerza = 15;
     }
 
+    // Habilidad especial del Guerrero: devuelve el daño que hace Embestida
     @Override
     public int usarHabilidadEspecial() {
-        this.GritoDeGuerra();
-        return 0;
+        return embestida();
     }
 
-    private void GritoDeGuerra() {
-        // Implementación de la habilidad especial del Guerrero
+    // Carga contra el enemigo: suma su fuerza al ataque normal
+    private int embestida() {
+        // Si no tiene furia suficiente, no puede usarla y no pierde el turno
+        if (getRecursoActual() < COSTO_EMBESTIDA) {
+            throw new IllegalStateException("No hay suficiente furia para usar Embestida.");
+        }
+        int danio = atacar() + fuerza;
+        consumirRecursos(COSTO_EMBESTIDA);
+        return danio;
     }
 
     @Override

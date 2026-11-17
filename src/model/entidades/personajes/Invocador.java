@@ -2,6 +2,9 @@ package model.entidades.personajes;
 
 public class Invocador extends Personaje {
     private static final String NOMBRE_RECURSO = "ESENCIA";
+    // Esencia que gasta cada vez que invoca a su animal
+    private static final int COSTO_ALIANZA_ANIMAL = 60;
+    // Poder del animal invocado; sube al subir de nivel
     private int espiritu;
 
     public Invocador(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
@@ -10,13 +13,21 @@ public class Invocador extends Personaje {
         this.espiritu = 15;
     }
 
+    // Habilidad especial del Invocador: devuelve el daño que hace Alianza Animal
     @Override
     public int usarHabilidadEspecial() {
-        invocarCriatura();
-        return 0;
+        return alianzaAnimal();
     }
 
-    private void invocarCriatura() {
+    // Invoca un animal que ataca: 110 % del ataque más el espíritu del invocador
+    private int alianzaAnimal() {
+        // Si no tiene esencia suficiente, no puede usarla y no pierde el turno
+        if (getRecursoActual() < COSTO_ALIANZA_ANIMAL) {
+            throw new IllegalStateException("No hay suficiente esencia para usar Alianza Animal.");
+        }
+        int danio = (int) Math.round(atacar() * 1.10) + espiritu;
+        consumirRecursos(COSTO_ALIANZA_ANIMAL);
+        return danio;
     }
 
     @Override

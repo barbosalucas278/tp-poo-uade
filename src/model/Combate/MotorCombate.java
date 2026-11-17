@@ -60,14 +60,31 @@ public class MotorCombate {
         finalizarAccion(atacante);
     }
 
+       // Ejecuta la habilidad especial del personaje que tiene el turno
     public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
+        // Solo puede actuar el personaje al que le toca
         if (atacante != actorActual) {
             throw new IllegalStateException("No es el turno del personaje.");
         }
+
+        // Habilidad de apoyo (Curador): cura a todos los personajes vivos del grupo
+        if (atacante.esHabilidadDeApoyo()) {
+            int curacion = atacante.usarHabilidadEspecial();
+            for (Entidad entidad : participantes) {
+                if (entidad instanceof Personaje && entidad.estaVivo()) {
+                    entidad.recibirSanacion(curacion);
+                }
+            }
+            finalizarAccion(atacante);
+            return;
+        }
+
+        // Habilidad de daño: necesita un objetivo válido y vivo
         if (objetivo == null || !participantes.contains(objetivo) || !objetivo.estaVivo()) {
             throw new IllegalArgumentException("Elegí un objetivo válido que siga en combate.");
         }
 
+        // Cada clase calcula su propio daño (polimorfismo) y el objetivo lo recibe
         int danio = atacante.usarHabilidadEspecial();
         objetivo.recibirDanio(danio);
         finalizarAccion(atacante);
