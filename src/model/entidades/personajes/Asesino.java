@@ -1,16 +1,25 @@
 package model.entidades.personajes;
 
+/**
+ * Personaje ágil que usa vigor como recurso.
+ * <p>Su habilidad especial es Daga Mortal: hace el 140% del ataque y puede
+ * ser crítica (daño doble). La probabilidad de crítico es la destreza,
+ * que crece al subir de nivel.</p>
+ */
 public class Asesino extends Personaje {
     private static final String NOMBRE_RECURSO = "VIGOR";
-    // Vigor que gasta cada vez que usa Daga Mortal
-    private static final int COSTO_DAGA_MORTAL = 40;
-    // Probabilidad (en %) de hacer golpe crítico; sube al subir de nivel
-    private int destreza;
+    private static final int COSTO_DAGA_MORTAL = 40; // Vigor que gasta cada vez que usa Daga Mortal
+    private int destreza; // Probabilidad de hacer golpe crítico
 
-    public int getDestreza() {
-        return destreza;
-    }
-
+    /**
+     * @param nombre         Nombre del personaje
+     * @param vidaMax        Vida maxima
+     * @param recursoMax     Mana maxima
+     * @param ataqueBase     Ataque inicial
+     * @param defensaBase    Defensa inicial
+     * @param velocidad      Energia que gana por tick de combate   
+     * @param rutaImagen     Ruta de la imagen de que muestra en pantalla
+     */
     public Asesino(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad,
             String rutaImagen) {
         super(nombre, vidaMax, recursoMax, ataqueBase, defensaBase, velocidad, rutaImagen, NOMBRE_RECURSO);
@@ -23,15 +32,19 @@ public class Asesino extends Personaje {
         return dagaMortal();
     }
 
-    // Ataque con daga: 140 % del ataque, con chance de crítico que duplica el daño
+    /**
+     * Ataca con la daga, sortea si es crítico y descuenta el vigor.
+     *
+     * @return Daño a aplicar al enemigo (el doble si es crítico)
+     * @throws IllegalStateException si no hay vigor suficiente (el turno no se pierde)
+     */
     private int dagaMortal() {
-        // Si no tiene vigor suficiente, no puede usarla y no pierde el turno
-        if (getRecursoActual() < COSTO_DAGA_MORTAL) {
+        if (getRecursoActual() < COSTO_DAGA_MORTAL) { // Si no tiene vigor suficiente, no puede usarla y no pierde el turno
             throw new IllegalStateException("No hay suficiente vigor para usar Daga Mortal.");
         }
         int danio = (int) Math.round(atacar() * 1.40);
-        // Sortea un número de 0 a 100: si es menor que la destreza, es crítico
-        if (Math.random() * 100 < destreza) {
+        
+        if (Math.random() * 100 < destreza) { // Sortea un número de 0 a 100: si es menor que la destreza, es crítico
             danio *= 2;
         }
         consumirRecursos(COSTO_DAGA_MORTAL);
