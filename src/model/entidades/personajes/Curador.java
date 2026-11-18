@@ -8,7 +8,7 @@ package model.entidades.personajes;
  */
 public class Curador extends Personaje {
     private static final String NOMBRE_RECURSO = "FE";
-    private static final int COSTO_SANACION = 50; // Fe que gasta cada vez que usa Sanación
+    private final int costoHabilidad = 50;
     private int fe; // Poder de curación; sube al subir de nivel
 
     /**
@@ -37,20 +37,14 @@ public class Curador extends Personaje {
         return sanacion();
     }
 
-    /**
-     * Calcula la curacion y descuenta la fe.
-     * El motor de combate aplica esta curacion a cada aliado vivo.
-     * 
-     * @return
-     * @throws IllegalStateException si no hay fe suficiente el turno no se pierde
-     */
+    /** Calcula la curación; el motor la aplica a cada aliado vivo. */
     private int sanacion() {
-        if (getRecursoActual() < COSTO_SANACION) { // Si no tiene fe suficiente, no puede usarla y no pierde el turno
-            throw new IllegalStateException("No hay suficiente fe para usar Sanación.");
-        }
-        int curacion = fe * 2;
-        consumirRecursos(COSTO_SANACION);
-        return curacion;
+        return fe * 2;
+    }
+
+    @Override
+    public int getCostoHabilidad() {
+        return costoHabilidad;
     }
 
     @Override

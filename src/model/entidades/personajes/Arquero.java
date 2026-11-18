@@ -7,7 +7,7 @@ package model.entidades.personajes;
  */
 public class Arquero extends Personaje {
     private static final String NOMBRE_RECURSO = "CONCENTRACION";
-    private static final int COSTO_DISPARO_CERTERO = 60;
+    private final int costoHabilidad = 60;
     private int punteria;
 
     /**
@@ -30,20 +30,14 @@ public class Arquero extends Personaje {
         return disparoCertero();
     }
 
-    /**
-     * Calcula el daño de Disparo Certero y descuenta la concentración.
-     *
-     * @return Daño a aplicar al enemigo
-     * @throws IllegalStateException si no hay concentración suficiente (el turno no se pierde)
-     */
+    /** Calcula el daño de Disparo Certero. */
     private int disparoCertero() {
-        if (getRecursoActual() < COSTO_DISPARO_CERTERO) {
-            throw new IllegalStateException("No hay sufiente concetracion para usar Disparo Certero");
-        }
+        return (int) Math.round(atacar() * 1.50) + punteria;
+    }
 
-        int danio = (int) Math.round(atacar() * 1.50) + punteria;
-        consumirRecursos(COSTO_DISPARO_CERTERO);
-        return danio;
+    @Override
+    public int getCostoHabilidad() {
+        return costoHabilidad;
     }
 
     @Override

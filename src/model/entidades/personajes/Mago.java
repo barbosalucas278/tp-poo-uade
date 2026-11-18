@@ -6,8 +6,8 @@ package model.entidades.personajes;
  */
 public class Mago extends Personaje {
     private static final String NOMBRE_RECURSO = "MANA";
-    private static final int COSTO_BOLA_DE_FUEGO = 50; // Mana que gasta para usar la bola de Fuego
     private int intelecto; // Daño extra de la Bola de Fuego. Empieza en 5 y sube 2 por nivel
+    private final int costoHabilidad = 50;
 
     /**
     * @param nombre         Nombre del personaje
@@ -29,19 +29,9 @@ public class Mago extends Personaje {
         return bolaDeFuego();
     }
 
-    /**
-     * Calcula el daño de Bola de fuego y descuenta el mana
-     * 
-     * @return Daño a aplicar al enemigo+
-     * @throws IllegalStateException si no hay maná suficiente el turno no se pierde
-     */
+    /** Calcula el daño de Bola de fuego. */
     private int bolaDeFuego() {
-        if (getRecursoActual() < COSTO_BOLA_DE_FUEGO) {
-            throw new IllegalStateException("No hay suficiente maná para lanzar Bola de fuego.");
-        }
-
         int danio = (int) Math.round(atacar() * 1.30) + intelecto;
-        consumirRecursos(COSTO_BOLA_DE_FUEGO);
         return danio;
     }
 
@@ -61,6 +51,11 @@ public class Mago extends Personaje {
     @Override
     public TipoPersonaje getTipo() {
         return TipoPersonaje.MAGO;
+    }
+
+    @Override
+    public int getCostoHabilidad() {
+        return costoHabilidad;
     }
 
 }

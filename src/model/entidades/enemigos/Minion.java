@@ -24,17 +24,11 @@ public class Minion extends Enemigo {
 
     // Le escupe a un personaje: 150 % de su ataque
     private int escupitajoAcido() {
-        // Si no tiene recurso suficiente, no puede usarla
-        if (getRecursoActual() < COSTO_ESCUPITAJO) {
-            throw new IllegalStateException("No hay suficiente recurso para usar Escupitajo Ácido.");
-        }
-        int danio = (int) Math.round(atacar() * 1.50);
-        consumirRecursos(COSTO_ESCUPITAJO);
-        return danio;
+        return (int) Math.round(atacar() * 1.50);
     }
 
     @Override
-    protected int getCostoHabilidad() {
+    public int getCostoHabilidad() {
         return COSTO_ESCUPITAJO;
     }
 

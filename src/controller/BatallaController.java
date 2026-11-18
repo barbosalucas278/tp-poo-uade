@@ -7,6 +7,7 @@ import java.util.List;
 import helpers.archivos.ResourcesHelper;
 import helpers.entidades.CalculadoraDeExperiencia;
 import helpers.entidades.GeneradorDeBotin;
+import model.Combate.EstadoCombate;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.ItemInventarioDTO;

@@ -30,17 +30,11 @@ public class Estandar extends Enemigo {
 
     // Golpe que atraviesa la armadura: 120 % de su ataque (el motor lo aplica sin descontar defensa)
     private int golpePerforante() {
-        // Si no tiene recurso suficiente, no puede usarla
-        if (getRecursoActual() < COSTO_GOLPE_PERFORANTE) {
-            throw new IllegalStateException("No hay suficiente recurso para usar Golpe Perforante.");
-        }
-        int danio = (int) Math.round(atacar() * 1.20);
-        consumirRecursos(COSTO_GOLPE_PERFORANTE);
-        return danio;
+        return (int) Math.round(atacar() * 1.20);
     }
 
     @Override
-    protected int getCostoHabilidad() {
+    public int getCostoHabilidad() {
         return COSTO_GOLPE_PERFORANTE;
     }
 

@@ -27,7 +27,7 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 
 import controller.BatallaController;
-import controller.EstadoCombate;
+import model.Combate.EstadoCombate;
 import model.DTOs.CombatienteDTO;
 import model.DTOs.MapaDTO;
 import view.componentes.BotonRPG;

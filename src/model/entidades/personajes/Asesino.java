@@ -8,7 +8,7 @@ package model.entidades.personajes;
  */
 public class Asesino extends Personaje {
     private static final String NOMBRE_RECURSO = "VIGOR";
-    private static final int COSTO_DAGA_MORTAL = 40; // Vigor que gasta cada vez que usa Daga Mortal
+    private final int costoHabilidad = 40;
     private int destreza; // Probabilidad de hacer golpe crítico
 
     /**
@@ -32,23 +32,19 @@ public class Asesino extends Personaje {
         return dagaMortal();
     }
 
-    /**
-     * Ataca con la daga, sortea si es crítico y descuenta el vigor.
-     *
-     * @return Daño a aplicar al enemigo (el doble si es crítico)
-     * @throws IllegalStateException si no hay vigor suficiente (el turno no se pierde)
-     */
+    /** Ataca con la daga y sortea si es crítico. */
     private int dagaMortal() {
-        if (getRecursoActual() < COSTO_DAGA_MORTAL) { // Si no tiene vigor suficiente, no puede usarla y no pierde el turno
-            throw new IllegalStateException("No hay suficiente vigor para usar Daga Mortal.");
-        }
         int danio = (int) Math.round(atacar() * 1.40);
         
         if (Math.random() * 100 < destreza) { // Sortea un número de 0 a 100: si es menor que la destreza, es crítico
             danio *= 2;
         }
-        consumirRecursos(COSTO_DAGA_MORTAL);
         return danio;
+    }
+
+    @Override
+    public int getCostoHabilidad() {
+        return costoHabilidad;
     }
 
     @Override

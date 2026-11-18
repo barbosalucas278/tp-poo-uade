@@ -7,10 +7,8 @@ public class Jefe extends Enemigo {
     private static final int DROP = 100;
     private static final int DROP_COMUN = 15;
     private static final int DROP_RARO = 55;
-    // Recurso que gasta cada vez que usa Aliento de Fuego
-    private static final int COSTO_ALIENTO_DE_FUEGO = 50;
-    // Para que la fase de furia se active una sola vez por combate
-    private boolean furiaActivada = false;
+    private static final int COSTO_ALIENTO_DE_FUEGO = 50; // Recurso que gasta cada vez que usa Aliento de Fuego
+    private boolean furiaActivada = false; // Para que la fase de furia se active una sola vez por combate
 
     public Jefe(String nombre, int vidaMax, int recursoMax, int ataqueBase, int defensaBase, int velocidad, int nivel,
             int experienciaOtorgada) {
@@ -46,17 +44,11 @@ public class Jefe extends Enemigo {
 
     // Quema a todo el grupo: 60 % de su ataque a cada personaje vivo (el motor lo aplica a todos)
     private int alientoDeFuego() {
-        // Si no tiene recurso suficiente, no puede usarla
-        if (getRecursoActual() < COSTO_ALIENTO_DE_FUEGO) {
-            throw new IllegalStateException("No hay suficiente recurso para usar Aliento de Fuego.");
-        }
-        int danio = (int) Math.round(atacar() * 0.60);
-        consumirRecursos(COSTO_ALIENTO_DE_FUEGO);
-        return danio;
+        return (int) Math.round(atacar() * 0.60);
     }
 
     @Override
-    protected int getCostoHabilidad() {
+    public int getCostoHabilidad() {
         return COSTO_ALIENTO_DE_FUEGO;
     }
 

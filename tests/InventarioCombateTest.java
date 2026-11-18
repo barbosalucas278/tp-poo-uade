@@ -4,10 +4,19 @@ import java.util.List;
 import controller.BatallaController;
 import model.Combate.MotorCombate;
 import model.DTOs.ItemInventarioDTO;
+import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.enemigos.EnemigoFactory;
+import model.entidades.enemigos.Elite;
+import model.entidades.enemigos.Estandar;
+import model.entidades.enemigos.Jefe;
+import model.entidades.enemigos.Minion;
 import model.entidades.enemigos.TipoEnemigo;
+import model.entidades.personajes.Arquero;
+import model.entidades.personajes.Asesino;
+import model.entidades.personajes.Curador;
 import model.entidades.personajes.Guerrero;
+import model.entidades.personajes.Invocador;
 import model.entidades.personajes.Mago;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
@@ -32,8 +41,13 @@ public class InventarioCombateTest {
         restaurarManaRespetaMaximo();
         usosInvalidosConservanObjetoYTurno();
         soloActuaElPersonajeEnTurno();
+        accionesOfensivasRechazanAliadosComoObjetivos();
         noSePuedeReutilizarUnObjetoConsumido();
         ataqueSigueFinalizandoElTurno();
+        defensaSoloSePermiteAlActorActual();
+        motorControlaCostoDeHabilidadesDeTodasLasClases();
+        motorControlaCostoDeHabilidadesDeEnemigos();
+        regeneracionDeRecursoEsResponsabilidadDelPersonaje();
         controllerValidaYExponeElInventario();
         factoryConservaRarezaYTipo();
         System.out.println("OK: " + verificaciones + " verificaciones de inventario y acciones de combate.");
@@ -129,6 +143,39 @@ public class InventarioCombateTest {
         verificar(escenario.actor.getVidaActual() == 50, "Un uso fuera de turno no debe curar.");
     }
 
+    private static void accionesOfensivasRechazanAliadosComoObjetivos() {
+        Escenario escenario = new Escenario();
+        int vidaAliado = escenario.aliado.getVidaActual();
+        esperarRechazo(() -> escenario.motor.ataque(escenario.actor, escenario.aliado));
+        verificar(escenario.aliado.getVidaActual() == vidaAliado,
+                "Un ataque básico no debe dañar a un aliado.");
+        verificar(escenario.motor.getActorActual() == escenario.actor,
+                "El ataque a un aliado debe conservar el turno.");
+
+        Escenario escenarioMago = new Escenario(new Mago("Mago", 100, 100, 20, 5, 10, ""));
+        int manaMago = escenarioMago.actor.getRecursoActual();
+        int vidaAliadoMago = escenarioMago.aliado.getVidaActual();
+        esperarRechazo(() -> escenarioMago.motor.usarHabilidadEspecial(
+                escenarioMago.actor, escenarioMago.aliado));
+        verificar(escenarioMago.actor.getRecursoActual() == manaMago,
+                "Una habilidad contra un aliado no debe gastar recursos.");
+        verificar(escenarioMago.aliado.getVidaActual() == vidaAliadoMago,
+                "Una habilidad ofensiva no debe dañar a un aliado.");
+
+        Personaje personaje = nuevoGuerrero();
+        Enemigo enemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
+        Enemigo aliadoEnemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
+        MotorCombate motorEnemigo = new MotorCombate(List.of(personaje), List.of(enemigo, aliadoEnemigo));
+        enemigo.acumularEnergia(100);
+        motorEnemigo.avanzarEnergia();
+        int vidaAliadoEnemigo = aliadoEnemigo.getVidaActual();
+        esperarRechazo(() -> motorEnemigo.ataque(enemigo, aliadoEnemigo));
+        verificar(aliadoEnemigo.getVidaActual() == vidaAliadoEnemigo,
+                "Un enemigo tampoco debe poder atacar a otro enemigo.");
+        verificar(motorEnemigo.getActorActual() == enemigo,
+                "El ataque de un enemigo a un aliado debe conservar el turno.");
+    }
+
     private static void noSePuedeReutilizarUnObjetoConsumido() {
         Escenario escenario = new Escenario();
         escenario.actor.setVidaActual(20);
@@ -150,6 +197,109 @@ public class InventarioCombateTest {
         verificar(escenario.enemigo.getVidaActual() < vidaAnterior, "El ataque debe seguir aplicando daño.");
         verificar(escenario.actor.getEnergiaActual() == 0 && escenario.motor.getActorActual() == null,
                 "El ataque debe seguir consumiendo la acción.");
+    }
+
+    private static void defensaSoloSePermiteAlActorActual() {
+        Escenario escenario = new Escenario();
+        esperarRechazo(() -> escenario.motor.defensa(escenario.aliado));
+        esperarRechazo(() -> escenario.motor.defensa(null));
+        verificar(escenario.motor.getActorActual() == escenario.actor,
+                "Una defensa fuera de turno no debe finalizar la acción actual.");
+        verificar(escenario.actor.getEnergiaActual() == 100,
+                "Una defensa fuera de turno no debe reiniciar la energía del actor.");
+
+        escenario.motor.defensa(escenario.actor);
+        verificar(escenario.motor.getActorActual() == null,
+                "La defensa del actor actual debe finalizar su turno.");
+        verificar(escenario.actor.getEnergiaActual() == 0,
+                "La defensa válida debe reiniciar la energía del actor.");
+    }
+
+    private static void motorControlaCostoDeHabilidadesDeTodasLasClases() {
+        Personaje[] personajes = {
+                new Guerrero("Guerrero", 100, 100, 20, 5, 10, ""),
+                new Arquero("Arquero", 100, 100, 20, 5, 10, ""),
+                new Asesino("Asesino", 100, 100, 20, 5, 10, ""),
+                new Curador("Curador", 100, 100, 20, 5, 10, ""),
+                new Invocador("Invocador", 100, 100, 20, 5, 10, ""),
+                new Mago("Mago", 100, 100, 20, 5, 10, "")
+        };
+
+        for (Personaje personaje : personajes) {
+            Enemigo enemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
+            MotorCombate motor = new MotorCombate(List.of(personaje), List.of(enemigo));
+            personaje.setRecursoActual(personaje.getCostoHabilidad() - 1);
+            personaje.setVidaActual(50);
+            personaje.acumularEnergia(100);
+            motor.avanzarEnergia();
+
+            int recursoAnterior = personaje.getRecursoActual();
+            int vidaAnterior = personaje.getVidaActual();
+            int vidaEnemigo = enemigo.getVidaActual();
+            Entidad objetivo = personaje.esHabilidadDeApoyo() ? null : enemigo;
+            esperarRechazo(() -> motor.usarHabilidadEspecial(personaje, objetivo));
+            verificar(personaje.getRecursoActual() == recursoAnterior,
+                    "La habilidad sin recurso suficiente no debe descontar recursos.");
+            verificar(personaje.getVidaActual() == vidaAnterior,
+                    "La habilidad sin recurso suficiente no debe aplicar sus efectos.");
+            verificar(enemigo.getVidaActual() == vidaEnemigo,
+                    "La habilidad sin recurso suficiente no debe dañar al objetivo.");
+            verificar(motor.getActorActual() == personaje,
+                    "La habilidad sin recurso suficiente debe conservar el turno.");
+
+            personaje.setRecursoActual(personaje.getCostoHabilidad());
+            motor.usarHabilidadEspecial(personaje, objetivo);
+            verificar(personaje.getRecursoActual() == 0,
+                    "El motor debe descontar el costo definido por cada clase.");
+            verificar(motor.getActorActual() == null, "Una habilidad válida debe finalizar el turno.");
+        }
+    }
+
+    private static void motorControlaCostoDeHabilidadesDeEnemigos() {
+        Enemigo[] enemigos = {
+                new Minion("Minion", 100, 100, 20, 5, 10, 1, 1),
+                new Jefe("Jefe", 100, 100, 20, 5, 10, 1, 1),
+                new Elite("Elite", 100, 100, 20, 5, 10, 1, 1),
+                new Estandar("Estandar", 100, 100, 20, 5, 10, 1, 1)
+        };
+
+        for (Enemigo enemigo : enemigos) {
+            Personaje objetivo = nuevoGuerrero();
+            MotorCombate motor = new MotorCombate(List.of(objetivo), List.of(enemigo));
+            enemigo.setRecursoActual(enemigo.getCostoHabilidad() - 1);
+            enemigo.acumularEnergia(100);
+            motor.avanzarEnergia();
+
+            int recursoAnterior = enemigo.getRecursoActual();
+            int vidaObjetivo = objetivo.getVidaActual();
+            List<Personaje> personajesVivos = List.of(objetivo);
+            esperarRechazo(() -> motor.habilidadEnemigo(enemigo, objetivo, personajesVivos));
+            verificar(enemigo.getRecursoActual() == recursoAnterior,
+                    "La habilidad enemiga sin recurso suficiente no debe descontar recursos.");
+            verificar(objetivo.getVidaActual() == vidaObjetivo,
+                    "La habilidad enemiga sin recurso suficiente no debe aplicar daño.");
+            verificar(motor.getActorActual() == enemigo,
+                    "La habilidad enemiga sin recurso suficiente debe conservar el turno.");
+
+            enemigo.setRecursoActual(enemigo.getCostoHabilidad());
+            motor.habilidadEnemigo(enemigo, objetivo, personajesVivos);
+            verificar(enemigo.getRecursoActual() == 0,
+                    "El motor debe descontar el costo definido por cada enemigo.");
+            verificar(motor.getActorActual() == null, "Una habilidad enemiga válida debe finalizar el turno.");
+        }
+    }
+
+    private static void regeneracionDeRecursoEsResponsabilidadDelPersonaje() {
+        Mago mago = new Mago("Mago", 100, 100, 20, 5, 10, "");
+        Enemigo enemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
+        mago.setRecursoActual(10);
+        enemigo.setRecursoActual(10);
+        MotorCombate motor = new MotorCombate(List.of(mago), List.of(enemigo));
+
+        motor.avanzarEnergia();
+
+        verificar(mago.getRecursoActual() == 13, "El personaje debe regenerar su recurso durante el tick.");
+        verificar(enemigo.getRecursoActual() == 10, "La regeneración del personaje no debe afectar al enemigo.");
     }
 
     private static void controllerValidaYExponeElInventario() {

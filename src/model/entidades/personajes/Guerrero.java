@@ -8,7 +8,7 @@ package model.entidades.personajes;
  */
 public class Guerrero extends Personaje {
     private static final String NOMBRE_RECURSO = "FURIA";
-    private static final int COSTO_EMBESTIDA = 30; // Furia que gasta cada vez que usa Embestida
+    private final int costoHabilidad = 30;
     private int fuerza;  // Daño extra que suma en la Embestida; sube al subir de nivel
 
     public int getFuerza() {
@@ -36,19 +36,14 @@ public class Guerrero extends Personaje {
         return embestida(); 
     }
 
-    /**
-     * Carga contra el enemigo y descuenta la furia
-     * 
-     * @return Daño a aplicar al enemigo
-     * @throws IllegalStateException Si no hay furia suficiente no se pierde el turno
-     */
+    /** Carga contra el enemigo y calcula el daño de la embestida. */
     private int embestida() {
-        if (getRecursoActual() < COSTO_EMBESTIDA) { // Si no tiene furia suficiente, no puede usarla y no pierde el turno
-            throw new IllegalStateException("No hay suficiente furia para usar Embestida.");
-        }
-        int danio = atacar() + fuerza;
-        consumirRecursos(COSTO_EMBESTIDA);
-        return danio;
+        return atacar() + fuerza;
+    }
+
+    @Override
+    public int getCostoHabilidad() {
+        return costoHabilidad;
     }
 
     @Override

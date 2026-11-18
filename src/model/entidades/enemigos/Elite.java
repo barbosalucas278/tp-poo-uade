@@ -7,8 +7,7 @@ public class Elite extends Enemigo {
     private static final int DROP = 70;
     private static final int DROP_COMUN = 45;
     private static final int DROP_RARO = 45;
-    // Recurso que gasta cada vez que usa Golpe Brutal
-    private static final int COSTO_GOLPE_BRUTAL = 25;
+    private static final int COSTO_GOLPE_BRUTAL = 25; // Recurso que gasta cada vez que usa Golpe Brutal
 
     public Elite(String nombre, int vida, int energia, int ataque, int defensa, int velocidad, int nivel,
             int experiencia) {
@@ -24,17 +23,11 @@ public class Elite extends Enemigo {
 
     // Un golpe muy fuerte a un personaje: 180 % de su ataque
     private int golpeBrutal() {
-        // Si no tiene recurso suficiente, no puede usarla
-        if (getRecursoActual() < COSTO_GOLPE_BRUTAL) {
-            throw new IllegalStateException("No hay suficiente recurso para usar Golpe Brutal.");
-        }
-        int danio = (int) Math.round(atacar() * 1.80);
-        consumirRecursos(COSTO_GOLPE_BRUTAL);
-        return danio;
+        return (int) Math.round(atacar() * 1.80);
     }
 
     @Override
-    protected int getCostoHabilidad() {
+    public int getCostoHabilidad() {
         return COSTO_GOLPE_BRUTAL;
     }
 

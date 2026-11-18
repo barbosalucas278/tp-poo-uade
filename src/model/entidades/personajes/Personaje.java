@@ -9,6 +9,8 @@ import model.objetos.ItemEquipable;
 import model.objetos.TipoObjeto;
 
 public abstract class Personaje extends Entidad {
+    private static final int REGENERACION_RECURSO_POR_TICK = 3;
+
     protected int nivel;
     protected int experienciaActual;
     protected int experienciaSiguientenivel;
@@ -89,6 +91,13 @@ public abstract class Personaje extends Entidad {
     }
 
     public abstract int usarHabilidadEspecial();
+
+    public abstract int getCostoHabilidad();
+
+    public void regenerarRecurso() {
+        generarRecursos(REGENERACION_RECURSO_POR_TICK);
+    }
+
         // Indica si la habilidad especial ayuda al grupo en lugar de dañar a un enemigo.
         // Por defecto es false; el Curador la sobrescribe y devuelve true.
         public boolean esHabilidadDeApoyo() {
@@ -98,6 +107,4 @@ public abstract class Personaje extends Entidad {
     public abstract String getNombreRecurso();
 
     public abstract TipoPersonaje getTipo();
-
-
 }
