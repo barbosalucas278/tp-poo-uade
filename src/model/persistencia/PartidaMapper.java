@@ -44,19 +44,15 @@ public class PartidaMapper {
             p.nivel = personaje.getNivel();
             p.experienciaActual = personaje.getExperienciaActual();
             p.experienciaSiguienteNivel = personaje.getExperienciaSiguienteNivel();
+            for (ItemEquipable equipado : personaje.getItemsEquipados()) {
+                p.equipados.add(aItemGuardado(equipado));
+            }
             snapshot.party.add(p);
         }
 
         for (Item item : partida.getInventarioGlobal().getItems()) {
             if (item instanceof ItemEquipable) {
-                ItemEquipable equipable = (ItemEquipable) item;
-                ItemGuardado i = new ItemGuardado();
-                i.nombre = equipable.getNombre();
-                i.descripcion = equipable.getDescripcion();
-                i.tipo = equipable.getTipo();
-                i.bonusAtaque = equipable.getBonusAtaque();
-                i.bonusDefensa = equipable.getBonusDefensa();
-                snapshot.inventario.add(i);
+                snapshot.inventario.add(aItemGuardado((ItemEquipable) item));
             } else if (item instanceof ItemConsumible) {
                 // Alcanza con tipo y rareza: al cargar, ItemsConsumiblesFactory recalcula nombre, descripción y cantidad
                 ItemConsumible consumible = (ItemConsumible) item;
@@ -101,6 +97,10 @@ public class PartidaMapper {
             personaje.setVidaActual(p.vidaActual);
             personaje.setRecursoActual(p.recursoActual);
             personaje.restaurarProgreso(p.nivel, p.experienciaActual, p.experienciaSiguienteNivel);
+            // Vuelve a equipar los objetos. No se aplica el bonus otra vez porque ataque y defensa ya lo incluyen
+            for (ItemGuardado i : p.equipados) {
+                personaje.equiparItem(i.tipo, aItemEquipable(i));
+            }
             party.add(personaje);
         }
 
@@ -129,8 +129,7 @@ public class PartidaMapper {
         }
 
         for (ItemGuardado i : snapshot.inventario) {
-            partida.getInventarioGlobal().agregarItem(
-                    new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa));
+            partida.getInventarioGlobal().agregarItem(aItemEquipable(i));
         }
 
         for (ConsumibleGuardado c : snapshot.consumibles) {
@@ -138,5 +137,19 @@ public class PartidaMapper {
         }
 
         return partida;
+    }
+
+    private static ItemGuardado aItemGuardado(ItemEquipable equipable) {
+        ItemGuardado i = new ItemGuardado();
+        i.nombre = equipable.getNombre();
+        i.descripcion = equipable.getDescripcion();
+        i.tipo = equipable.getTipo();
+        i.bonusAtaque = equipable.getBonusAtaque();
+        i.bonusDefensa = equipable.getBonusDefensa();
+        return i;
+    }
+
+    private static ItemEquipable aItemEquipable(ItemGuardado i) {
+        return new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa);
     }
 }

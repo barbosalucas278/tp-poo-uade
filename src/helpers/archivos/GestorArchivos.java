@@ -33,6 +33,7 @@ import model.objetos.TipoRareza;
  *
  * PARTIDA|nombre
  * PERSONAJE|tipo|nombre|rutaImagen|vida|recurso|ataque|defensa|velocidad|nivel|xp|xpSiguienteNivel
+ * EQUIPADO|nombre|descripcion|tipo|bonusAtaque|bonusDefensa   (objeto equipado del último PERSONAJE leído)
  * ITEM|nombre|descripcion|tipo|bonusAtaque|bonusDefensa
  * CONSUMIBLE|tipo|rareza
  * MAPA|numero|completado
@@ -83,6 +84,10 @@ public class GestorArchivos {
             escribirLinea(writer, "PERSONAJE", p.tipo, p.nombre, p.rutaImagen, p.vidaActual, p.recursoActual,
                     p.ataqueBase, p.defensaBase, p.velocidad, p.nivel, p.experienciaActual,
                     p.experienciaSiguienteNivel);
+            for (ItemGuardado equipado : p.equipados) {
+                escribirLinea(writer, "EQUIPADO", equipado.nombre, equipado.descripcion, equipado.tipo,
+                        equipado.bonusAtaque, equipado.bonusDefensa);
+            }
         }
 
         for (ItemGuardado item : partida.inventario) {
@@ -136,6 +141,19 @@ public class GestorArchivos {
                     personaje.experienciaActual = Integer.parseInt(campos[10]);
                     personaje.experienciaSiguienteNivel = Integer.parseInt(campos[11]);
                     partida.party.add(personaje);
+                    break;
+
+                case "EQUIPADO":
+                    if (partida.party.isEmpty()) {
+                        throw new IllegalArgumentException("EQUIPADO sin un PERSONAJE previo");
+                    }
+                    ItemGuardado equipado = new ItemGuardado();
+                    equipado.nombre = campos[1];
+                    equipado.descripcion = campos[2];
+                    equipado.tipo = TipoObjeto.valueOf(campos[3]);
+                    equipado.bonusAtaque = Integer.parseInt(campos[4]);
+                    equipado.bonusDefensa = Integer.parseInt(campos[5]);
+                    partida.party.get(partida.party.size() - 1).equipados.add(equipado);
                     break;
 
                 case "ITEM":

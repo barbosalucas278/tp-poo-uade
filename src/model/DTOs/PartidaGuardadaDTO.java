@@ -30,6 +30,7 @@ public class PartidaGuardadaDTO {
         public int nivel;
         public int experienciaActual;
         public int experienciaSiguienteNivel;
+        public List<ItemGuardado> equipados = new ArrayList<>();
     }
 
     public static class ItemGuardado {

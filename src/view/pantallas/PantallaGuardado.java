@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import model.partidas.GestorPartida;
+import controller.GuardadoController;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,6 +27,7 @@ public class PantallaGuardado extends JFrame {
     private JButton btnVolver;
     private boolean esModoGuardar; // true = Guardar, false = Cargar
     private JFrame pantallaAnterior; // a dónde vuelve el botón Volver (null = menú principal)
+    private final GuardadoController controller = new GuardadoController();
 
     public PantallaGuardado(boolean esModoGuardar) {
         this(esModoGuardar, null);
@@ -93,7 +94,7 @@ public class PantallaGuardado extends JFrame {
     }
 
     private String obtenerTextoSlot(String nombreSlot) {
-        if (GestorPartida.getInstance().existePartidaGuardada(nombreSlot)) {
+        if (controller.existePartidaGuardada(nombreSlot)) {
             return "SLOT: " + nombreSlot.toUpperCase() + " (Partida Guardada)";
         } else {
             return "VACÍO";
@@ -114,14 +115,14 @@ public class PantallaGuardado extends JFrame {
 
     private void procesarAccionSlot(String slot) {
         if (esModoGuardar) {
-            if (GestorPartida.getInstance().existePartidaGuardada(slot)) {
+            if (controller.existePartidaGuardada(slot)) {
                 int opcion = JOptionPane.showConfirmDialog(this, "El " + slot + " ya tiene una partida. ¿Sobrescribirla?",
                         "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (opcion != JOptionPane.YES_OPTION) {
                     return;
                 }
             }
-            boolean exito = GestorPartida.getInstance().guardarPartidaActual(slot);
+            boolean exito = controller.guardarPartida(slot);
             if (exito) {
                 JOptionPane.showMessageDialog(this, "Partida guardada correctamente en " + slot, "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 actualizarTextoBotones();
@@ -134,16 +135,15 @@ public class PantallaGuardado extends JFrame {
     }
 
     private void cargarYContinuar(String slot) {
-        GestorPartida gestor = GestorPartida.getInstance();
-        if (!gestor.existePartidaGuardada(slot)) {
+        if (!controller.existePartidaGuardada(slot)) {
             JOptionPane.showMessageDialog(this, "El slot seleccionado está vacío.", "Atención", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (!gestor.cargarPartidaExistente(slot)) {
+        if (!controller.cargarPartida(slot)) {
             JOptionPane.showMessageDialog(this, "No se pudo cargar la partida: el archivo está dañado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (!gestor.hayNivelPendiente()) {
+        if (!controller.hayNivelPendiente()) {
             JOptionPane.showMessageDialog(this, "Esta partida ya fue completada: no quedan niveles por jugar.", "Atención", JOptionPane.INFORMATION_MESSAGE);
             return;
         }

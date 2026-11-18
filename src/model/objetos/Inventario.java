@@ -43,13 +43,20 @@ public class Inventario {
 
     public void equiparItem(ItemEquipable item, Personaje personaje) {
         if (items.contains(item)) {
+            // Si ya tenía algo equipado en ese lugar, lo vuelve al inventario
+            ItemEquipable anterior = personaje.getItemEquipado(item.getTipo());
+            if (anterior != null) {
+                desequiparItem(anterior, personaje);
+            }
             item.aplicarBonus(personaje);
+            personaje.equiparItem(item.getTipo(), item);
             items.remove(item);
         }
     }
 
     public void desequiparItem(ItemEquipable item, Personaje personaje) {
         item.removerBonus(personaje);
+        personaje.desequiparItem(item.getTipo());
         items.add(item);
     }
 

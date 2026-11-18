@@ -1,6 +1,8 @@
 package model.entidades.personajes;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 
 import model.entidades.Entidad;
 import model.objetos.ItemEquipable;
@@ -68,6 +70,16 @@ public abstract class Personaje extends Entidad {
 
     public void desequiparItem(TipoObjeto tipo) {
         this.equipamiento.remove(tipo);
+    }
+
+    /** @return el objeto equipado en ese lugar (ARMA o ARMADURA), o null si no tiene nada */
+    public ItemEquipable getItemEquipado(TipoObjeto tipo) {
+        return this.equipamiento.get(tipo);
+    }
+
+    /** @return una copia de la lista de objetos que tiene equipados */
+    public List<ItemEquipable> getItemsEquipados() {
+        return new ArrayList<>(this.equipamiento.values());
     }
 
     public void restaurarProgreso(int nivel, int xpActual, int xpSiguiente) {
