@@ -1,9 +1,14 @@
 package model.entidades.enemigos;
 
+import java.util.List;
+
 import model.entidades.Entidad;
 import model.entidades.personajes.Personaje;
 
 public abstract class Enemigo extends Entidad {
+    // Recurso que recupera cada vez que hace un ataque normal
+    private static final int RECUPERACION_POR_ATAQUE = 10;
+
     protected int nivel;
     protected int experienciaOtorgada;
     protected DropStats dropStats;
@@ -22,33 +27,48 @@ public abstract class Enemigo extends Entidad {
 
     public abstract TipoEnemigo getTipo();
 
-    // Nombre de la habilidad especial (para mostrarlo en pantalla)
-    public abstract String getNombreHabilidad();
+    // Habilidad especial del enemigo: cada clase devuelve el daño que hace la suya
+    public abstract int usarHabilidadEspecial();
 
-    // Recurso que cuesta usar la habilidad
-    public abstract int getCostoHabilidad();
+    // Recurso que cuesta usar la habilidad (lo usa puedeUsarHabilidad para no tirar excepción)
+    protected abstract int getCostoHabilidad();
 
-    // Cuánto multiplica su ataque la habilidad (1.5 = 150 % del ataque)
-    public abstract double getMultiplicadorHabilidad();
-
-    // Si la habilidad golpea a todo el grupo; por defecto golpea a uno solo
+    // Indica si su habilidad golpea a todo el grupo en vez de a un solo personaje.
+    // Por defecto es false; el Jefe la sobrescribe y devuelve true.
     public boolean habilidadAfectaATodos() {
         return false;
     }
 
-    // Si la habilidad ignora la defensa del personaje; por defecto no la ignora
+    // Indica si su habilidad ignora la defensa del personaje.
+    // Por defecto es false; el Estandar la sobrescribe y devuelve true.
     public boolean habilidadIgnoraDefensa() {
         return false;
     }
 
     // Probabilidad (en %) de usar la habilidad cuando le alcanza el recurso
-    public int getProbabilidadHabilidad() {
+    protected int getProbabilidadHabilidad() {
         return 30;
     }
 
     // Indica si tiene recurso suficiente para usar la habilidad
     public boolean puedeUsarHabilidad() {
         return getRecursoActual() >= getCostoHabilidad();
+    }
+
+    // Decide si en este turno usa la habilidad: necesita recurso suficiente y que salga el sorteo
+    public boolean quiereUsarHabilidad() {
+        return puedeUsarHabilidad() && Math.random() * 100 < getProbabilidadHabilidad();
+    }
+
+    // Elige al azar a qué personaje vivo va a atacar
+    public Personaje seleccionarObjetivo(List<Personaje> personajesVivos) {
+        int indice = (int) (Math.random() * personajesVivos.size());
+        return personajesVivos.get(indice);
+    }
+
+    // Después de un ataque normal recupera un poco de recurso para poder usar la habilidad más adelante
+    public void recuperarRecursoPorAtaque() {
+        generarRecursos(RECUPERACION_POR_ATAQUE);
     }
 
     // Se ejecuta al empezar su turno. Por defecto no hace nada; el Jefe lo usa para su fase de furia
