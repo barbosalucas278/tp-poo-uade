@@ -97,15 +97,41 @@ public class MotorCombate {
         finalizarAccion(atacante);
     }
 
-    // Ejecuta la habilidad especial del enemigo que tiene el turno ENEMIGO
+       // Ejecuta la habilidad especial del enemigo que tiene el turno ENEMIGO
     public void habilidadEnemigo(Enemigo enemigo, Personaje objetivo, List<Personaje> personajesVivos) {
         // Solo puede actuar el enemigo al que le toca
         if (enemigo != actorActual) {
             throw new IllegalStateException("No es el turno del enemigo.");
         }
-        // Cada enemigo aplica su propio efecto (polimorfismo)
-        enemigo.usarHabilidadEspecial(objetivo, personajesVivos);
+
+        // Habilidad de área (Jefe): golpea a todos los personajes vivos del grupo
+        if (enemigo.habilidadAfectaATodos()) {
+            int danio = enemigo.usarHabilidadEspecial();
+            for (Personaje personaje : personajesVivos) {
+                aplicarDanioHabilidad(enemigo, personaje, danio);
+            }
+            finalizarAccion(enemigo);
+            return;
+        }
+
+        // Habilidad a un solo objetivo: necesita un personaje válido y vivo
+        if (objetivo == null || !participantes.contains(objetivo) || !objetivo.estaVivo()) {
+            throw new IllegalArgumentException("El enemigo necesita un objetivo válido que siga en combate.");
+        }
+
+        // Cada enemigo calcula su propio daño (polimorfismo) y el objetivo lo recibe
+        int danio = enemigo.usarHabilidadEspecial();
+        aplicarDanioHabilidad(enemigo, objetivo, danio);
         finalizarAccion(enemigo);
+    }
+
+    // Aplica el daño de la habilidad: si el enemigo ignora la defensa, resta la vida directo
+    private void aplicarDanioHabilidad(Enemigo enemigo, Personaje objetivo, int danio) {
+        if (enemigo.habilidadIgnoraDefensa()) {
+            objetivo.setVidaActual(objetivo.getVidaActual() - danio);
+        } else {
+            objetivo.recibirDanio(danio);
+        }
     }
 
     public void defensa(Entidad personaje) {
