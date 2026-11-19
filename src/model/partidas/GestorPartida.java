@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Random;
 
 import helpers.archivos.GestorArchivos;
+import helpers.entidades.CalculadoraDeExperiencia;
+import helpers.entidades.GeneradorDeBotin;
 import model.DTOs.PartidaGuardadaDTO;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.enemigos.TipoEnemigo;
 import model.entidades.personajes.Personaje;
+import model.objetos.Item;
 import model.persistencia.PartidaMapper;
 
 public class GestorPartida {
@@ -37,6 +40,26 @@ public class GestorPartida {
         Partida nuevaPartida = new Partida(nombrePartida, party, generarNuevoMapa(NIVEL_INICIAL));
         this.partidaActual = nuevaPartida;
         return this.partidaActual;
+    }
+
+    /** Otorga las recompensas de la victoria y devuelve si queda otro nivel por jugar. */
+    public boolean completarNivel(Nivel nivel) {
+        Mapa mapa = partidaActual == null ? null : partidaActual.getMapaActual();
+        if (nivel == null || mapa == null || nivel != mapa.getNivelActual()
+                || nivel.getEnemigos().stream().anyMatch(Enemigo::estaVivo)) {
+            throw new IllegalStateException("El nivel solo se puede completar después de una victoria.");
+        }
+
+        List<Enemigo> enemigos = nivel.getEnemigos();
+        int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(enemigos);
+        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(enemigos);
+        otorgarExperiencia(experienciaGanada);
+        partidaActual.setInventarioGlobal(itemsGanados);
+        nivel.setCompletado(true);
+        if (mapa.getNivelActual() == null) {
+            avanzarMapa();
+        }
+        return hayNivelPendiente();
     }
 
     public void avanzarMapa() {

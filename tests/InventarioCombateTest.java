@@ -2,9 +2,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import controller.BatallaController;
+import model.Combate.EstadoCombate;
 import model.Combate.MotorCombate;
 import model.DTOs.ItemInventarioDTO;
 import model.entidades.Entidad;
+import model.entidades.enemigos.DropStats;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.enemigos.Elite;
@@ -29,6 +31,7 @@ import model.objetos.TipoItemConsumible;
 import model.objetos.TipoObjeto;
 import model.objetos.TipoRareza;
 import model.partidas.GestorPartida;
+import model.partidas.Nivel;
 import model.partidas.Partida;
 
 /** Pruebas sin dependencias: compilar junto a src y ejecutar InventarioCombateTest. */
@@ -47,8 +50,10 @@ public class InventarioCombateTest {
         defensaSoloSePermiteAlActorActual();
         motorControlaCostoDeHabilidadesDeTodasLasClases();
         motorControlaCostoDeHabilidadesDeEnemigos();
+        motorResuelveTurnoEnemigoYDetectaDerrota();
         regeneracionDeRecursoEsResponsabilidadDelPersonaje();
         controllerValidaYExponeElInventario();
+        controllerAplicaRecompensasUnaSolaVez();
         factoryConservaRarezaYTipo();
         System.out.println("OK: " + verificaciones + " verificaciones de inventario y acciones de combate.");
     }
@@ -207,12 +212,26 @@ public class InventarioCombateTest {
                 "Una defensa fuera de turno no debe finalizar la acción actual.");
         verificar(escenario.actor.getEnergiaActual() == 100,
                 "Una defensa fuera de turno no debe reiniciar la energía del actor.");
+        escenario.aliado.recibirDanio(20);
+        verificar(escenario.aliado.getVidaActual() == 85,
+                "Una defensa fuera de turno no debe aumentar la defensa del aliado.");
 
         escenario.motor.defensa(escenario.actor);
         verificar(escenario.motor.getActorActual() == null,
                 "La defensa del actor actual debe finalizar su turno.");
         verificar(escenario.actor.getEnergiaActual() == 0,
                 "La defensa válida debe reiniciar la energía del actor.");
+        escenario.actor.recibirDanio(20);
+        verificar(escenario.actor.getVidaActual() == 95, "El motor debe aplicar la defensa antes de terminar el turno.");
+
+        escenario.actor.acumularEnergia(100);
+        escenario.motor.avanzarEnergia();
+        esperarRechazo(() -> escenario.motor.ataque(escenario.actor, null));
+        escenario.actor.recibirDanio(20);
+        verificar(escenario.actor.getVidaActual() == 90, "Un ataque inválido debe conservar la defensa.");
+        escenario.motor.ataque(escenario.actor, escenario.enemigo);
+        escenario.actor.recibirDanio(20);
+        verificar(escenario.actor.getVidaActual() == 75, "El ataque válido debe quitar la defensa.");
     }
 
     private static void motorControlaCostoDeHabilidadesDeTodasLasClases() {
@@ -289,6 +308,22 @@ public class InventarioCombateTest {
         }
     }
 
+    private static void motorResuelveTurnoEnemigoYDetectaDerrota() {
+        Guerrero personaje = nuevoGuerrero();
+        Enemigo enemigo = new Minion("Slime", 100, 100, 25, 5, 10, 1, 1);
+        enemigo.setRecursoActual(0);
+        enemigo.acumularEnergia(100);
+        MotorCombate motor = new MotorCombate(List.of(personaje), List.of(enemigo));
+
+        verificar(motor.getEstado() == null, "El combate debe seguir mientras ambos equipos estén en pie.");
+        motor.avanzarCombate();
+        verificar(personaje.getVidaActual() == 80, "El motor debe resolver el ataque del enemigo automáticamente.");
+        verificar(enemigo.getRecursoActual() == 10 && motor.getActorActual() == null,
+                "El ataque normal debe recuperar recurso y finalizar el turno enemigo.");
+        personaje.setVidaActual(0);
+        verificar(motor.getEstado() == EstadoCombate.DERROTA, "El motor debe detectar la derrota de la party.");
+    }
+
     private static void regeneracionDeRecursoEsResponsabilidadDelPersonaje() {
         Mago mago = new Mago("Mago", 100, 100, 20, 5, 10, "");
         Enemigo enemigo = EnemigoFactory.crearEnemigo(TipoEnemigo.SLIME, 1);
@@ -345,6 +380,43 @@ public class InventarioCombateTest {
         esperarRechazo(() -> controller.resolverUsoItem(0, 1));
         verificar(partida.getInventarioGlobal().getItems().size() == 2,
                 "Un combate terminado no debe permitir consumir objetos.");
+    }
+
+    private static void controllerAplicaRecompensasUnaSolaVez() {
+        Guerrero actor = nuevoGuerrero();
+        Guerrero aliado = nuevoGuerrero();
+        Partida partida = GestorPartida.getInstance().nuevaPartida("Prueba recompensas",
+                new ArrayList<>(List.of(actor, aliado)));
+        Nivel nivel = partida.getMapaActual().getNivelActual();
+        Enemigo enemigo = new Minion("Slime", 1, 100, 10, 0, 10, 1, 25) {
+            @Override
+            public DropStats GetProbabilidadDeDrop() {
+                return new DropStats(100, 100, 0);
+            }
+        };
+        nivel.getEnemigos().clear();
+        nivel.getEnemigos().add(enemigo);
+        BatallaController controller = new BatallaController();
+
+        esperarRechazo(() -> controller.continuarAlSiguienteNivel());
+        actor.acumularEnergia(100);
+        controller.avanzarCombate();
+        verificar(controller.resolverAtaque(0, 0), "El controlador debe delegar el ataque de la selección.");
+        verificar(controller.verificarEstadoCombate() == EstadoCombate.VICTORIA, "Debe detectarse la victoria.");
+        verificar(controller.continuarAlSiguienteNivel() && nivel.isCompletado(),
+                "La victoria debe completar el nivel y dejar disponible el siguiente.");
+        verificar(controller.getMapaActual().nivelActual == nivel.getNumeroNivel() + 1,
+                "El DTO debe mostrar el nuevo nivel después del avance.");
+
+        Nivel siguienteNivel = partida.getMapaActual().getNivelActual();
+        for (Enemigo enemigoSiguiente : siguienteNivel.getEnemigos()) {
+            enemigoSiguiente.setVidaActual(0);
+        }
+        esperarRechazo(() -> controller.continuarAlSiguienteNivel());
+        verificar(!siguienteNivel.isCompletado(), "La confirmación anterior no debe completar otro nivel.");
+        verificar(actor.getExperienciaActual() == 25 && aliado.getExperienciaActual() == 25,
+                "Cada personaje debe recibir la experiencia de la victoria una sola vez.");
+        verificar(controller.getCantidadItemsInventario() == 1, "El inventario debe recibir el botín una sola vez.");
     }
 
     private static void factoryConservaRarezaYTipo() {

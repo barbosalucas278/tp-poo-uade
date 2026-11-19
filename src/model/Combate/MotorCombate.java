@@ -7,6 +7,7 @@ import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
+import model.objetos.Item;
 import model.objetos.ItemConsumible;
 
 /**
@@ -31,6 +32,45 @@ public class MotorCombate {
 
         participantes.addAll(this.personajes);
         participantes.addAll(this.enemigos);
+    }
+
+    /** Avanza los turnos y resuelve la acción automáticamente si le toca a un enemigo. */
+    public void avanzarCombate() {
+        if (getEstado() != null) {
+            return;
+        }
+        avanzarEnergia();
+        if (!(actorActual instanceof Enemigo)) {
+            return;
+        }
+
+        Enemigo enemigo = (Enemigo) actorActual;
+        List<Personaje> personajesVivos = new ArrayList<>();
+        for (Personaje personaje : personajes) {
+            if (personaje.estaVivo()) {
+                personajesVivos.add(personaje);
+            }
+        }
+
+        enemigo.alIniciarTurno();
+        Personaje objetivo = enemigo.seleccionarObjetivo(personajesVivos);
+        if (enemigo.quiereUsarHabilidad()) {
+            habilidadEnemigo(enemigo, objetivo, personajesVivos);
+        } else {
+            ataque(enemigo, objetivo);
+            enemigo.recuperarRecursoPorAtaque();
+        }
+    }
+
+    /** Devuelve el resultado del combate o null mientras ambos equipos sigan en pie. */
+    public EstadoCombate getEstado() {
+        if (enemigos.stream().noneMatch(Enemigo::estaVivo)) {
+            return EstadoCombate.VICTORIA;
+        }
+        if (personajes.stream().noneMatch(Personaje::estaVivo)) {
+            return EstadoCombate.DERROTA;
+        }
+        return null;
     }
 
     /**
@@ -88,11 +128,14 @@ public class MotorCombate {
      * @throws IllegalArgumentException si el defensor no es un objetivo hostil válido y vivo                            
      */
     public void ataque(Entidad atacante, Entidad defensor) {
-        if (atacante != actorActual) {
+        if (atacante == null || atacante != actorActual || !atacante.estaVivo()) {
             throw new IllegalStateException("No es el turno del atacante.");
         }
         if (defensor == null || !defensor.estaVivo() || !esObjetivoHostil(atacante, defensor)) {
             throw new IllegalArgumentException("El defensor debe ser un participante vivo del equipo contrario.");
+        }
+        if (atacante instanceof Personaje) {
+            atacante.resetEstado();
         }
         int danio = atacante.atacar();
         defensor.recibirDanio(danio);
@@ -110,8 +153,8 @@ public class MotorCombate {
      * @throws IllegalArgumentException si el objetivo de daño no es válido
      */
     public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
-        if (atacante != actorActual) { // Solo puede actuar el personaje al que le toca
-            throw new IllegalStateException("No es el turno del personaje."); 
+        if (atacante == null || atacante != actorActual || !atacante.estaVivo()) {
+            throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
         }
 
         // Habilidad de apoyo (Curador): cura a todos los personajes vivos del grupo
@@ -129,7 +172,10 @@ public class MotorCombate {
         }
 
         // Habilidad de daño: necesita un objetivo hostil, válido y vivo
-        if (objetivo == null || !objetivo.estaVivo() || !esObjetivoHostil(atacante, objetivo)) {
+        if (objetivo == null) {
+            throw new IllegalArgumentException("Seleccioná un enemigo.");
+        }
+        if (!objetivo.estaVivo() || !esObjetivoHostil(atacante, objetivo)) {
             throw new IllegalArgumentException("Elegí un enemigo válido que siga en combate.");
         }
 
@@ -240,7 +286,7 @@ public class MotorCombate {
     }
 
     /**
-     * Finaliza la acción defensiva del actor actual.
+     * Aplica la defensa del actor actual y finaliza su acción.
      *
      * @param personaje entidad que realiza la defensa
      * @throws IllegalStateException si la entidad no está viva o no tiene el turno
@@ -249,7 +295,14 @@ public class MotorCombate {
         if (personaje == null || personaje != actorActual || !personaje.estaVivo()) {
             throw new IllegalStateException("Esperá el turno de la entidad para defenderte.");
         }
+        personaje.defenderse();
         finalizarAccion(personaje);
+    }
+
+    /** Comprueba el turno y las condiciones del objeto sin ejecutar la acción. */
+    public void validarUsoItem(Personaje actor, Item item) {
+        validarTurnoParaUsarItem(actor);
+        obtenerConsumible(item).validarUso(actor);
     }
 
     /**
@@ -260,19 +313,31 @@ public class MotorCombate {
      * @param inventario inventario del que se consume el objeto
      * @throws IllegalStateException si el personaje no tiene el turno o no está vivo
      * @throws IllegalArgumentException si el personaje no participa en el combate
-     *                                  o el objeto no está disponible
+     *                                  o el objeto no está disponible o no es consumible
      */
-    public void usarItem(Personaje actor, ItemConsumible item, Inventario inventario) {
+    public void usarItem(Personaje actor, Item item, Inventario inventario) {
+        validarTurnoParaUsarItem(actor);
+        ItemConsumible consumible = obtenerConsumible(item);
+        if (inventario == null || !inventario.consumirItem(consumible, actor)) {
+            throw new IllegalArgumentException("El objeto ya no está en el inventario.");
+        }
+        finalizarAccion(actor);
+    }
+
+    private void validarTurnoParaUsarItem(Personaje actor) {
         if (actor == null || actor != actorActual || !actor.estaVivo()) {
             throw new IllegalStateException("Esperá el turno del personaje para usar un objeto.");
         }
         if (!participantes.contains(actor)) {
             throw new IllegalArgumentException("El personaje debe pertenecer a esta batalla.");
         }
-        if (inventario == null || !inventario.consumirItem(item, actor)) {
-            throw new IllegalArgumentException("El objeto ya no está en el inventario.");
+    }
+
+    private ItemConsumible obtenerConsumible(Item item) {
+        if (!(item instanceof ItemConsumible)) {
+            throw new IllegalArgumentException("Los equipables no se pueden usar como consumibles en batalla.");
         }
-        finalizarAccion(actor);
+        return (ItemConsumible) item;
     }
 
     /**

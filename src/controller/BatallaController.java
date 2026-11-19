@@ -1,12 +1,8 @@
 package controller;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import helpers.archivos.ResourcesHelper;
-import helpers.entidades.CalculadoraDeExperiencia;
-import helpers.entidades.GeneradorDeBotin;
 import model.Combate.EstadoCombate;
 import model.Combate.MotorCombate;
 import model.DTOs.CombatienteDTO;
@@ -16,7 +12,6 @@ import model.entidades.Entidad;
 import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Personaje;
 import model.objetos.Item;
-import model.objetos.ItemConsumible;
 import model.partidas.GestorPartida;
 import model.partidas.Mapa;
 import model.partidas.Nivel;
@@ -24,77 +19,99 @@ import model.partidas.Partida;
 
 public class BatallaController {
     private final GestorPartida gestorPartida;
+    private final Partida partida;
+    private final Nivel nivelCombate;
     private final MotorCombate motorCombate;
 
     public BatallaController() {
-        this.gestorPartida = GestorPartida.getInstance();
-        Partida partidaActual = this.gestorPartida.getPartidaActual();
-        this.motorCombate = new MotorCombate(partidaActual.getParty(),
-                partidaActual.getMapaActual().getNivelActual().getEnemigos());
+        gestorPartida = GestorPartida.getInstance();
+        partida = gestorPartida.getPartidaActual();
+        nivelCombate = obtenerNivelActual();
+        motorCombate = nivelCombate == null ? null : new MotorCombate(partida.getParty(), nivelCombate.getEnemigos());
     }
 
     public MapaDTO getMapaActual() {
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        if (nivel == null) {
-            return null;
-        }
-        return new MapaDTO(mapa.getNumeroMapa(), nivel.getNumeroNivel(), mapa.getNiveles().size());
+        return BatallaMapper.aMapaDTO(obtenerMapaActual());
     }
 
     public List<CombatienteDTO> getPartyActual() {
-        Partida partida = gestorPartida.getPartidaActual();
-        if (partida == null) {
-            return Collections.emptyList();
-        }
-        List<CombatienteDTO> party = new ArrayList<>();
-        for (Personaje personaje : partida.getParty()) {
-            party.add(crearCombatiente(personaje, personaje.getRutaImagen(), personaje.getNombreRecurso()));
-        }
-        return party;
+        return partida == null ? Collections.emptyList() : BatallaMapper.aPartyDTO(partida.getParty());
     }
 
     public List<CombatienteDTO> getEnemigosActuales() {
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        if (nivel == null) {
-            return Collections.emptyList();
-        }
-        List<CombatienteDTO> enemigos = new ArrayList<>();
-        for (Enemigo enemigo : nivel.getEnemigos()) {
-            enemigos.add(crearCombatiente(enemigo,
-                    ResourcesHelper.getRutaImagenEnemigo(enemigo.getTipo()), "VIGOR"));
-        }
-        return Collections.unmodifiableList(enemigos);
+        Nivel nivel = obtenerNivelActual();
+        return nivel == null ? Collections.emptyList() : BatallaMapper.aEnemigosDTO(nivel.getEnemigos());
     }
 
     public int getCantidadItemsInventario() {
-        Partida partida = gestorPartida.getPartidaActual();
         return partida == null ? 0 : partida.getInventarioGlobal().getItems().size();
     }
 
     public int getCapacidadInventario() {
-        Partida partida = gestorPartida.getPartidaActual();
         return partida == null ? 0 : partida.getInventarioGlobal().getCapacidadMax();
     }
 
     public List<ItemInventarioDTO> getItemsInventario() {
-        Partida partida = gestorPartida.getPartidaActual();
+        return partida == null ? Collections.emptyList() : BatallaMapper.aItemsDTO(partida.getInventarioGlobal().getItems());
+    }
 
-        List<ItemInventarioDTO> resultado = new ArrayList<>();
-        List<Item> items = partida.getInventarioGlobal().getItems();
-        for (int i = 0; i < items.size(); i++) {
-            Item item = items.get(i);
-            resultado.add(new ItemInventarioDTO(i, item.getNombre(), item.getDescripcion(), item.getRareza(),
-                    item instanceof ItemConsumible));
+    public void avanzarCombate() {
+        if (hayCombateActual()) {
+            motorCombate.avanzarCombate();
         }
-        return resultado;
+    }
+
+    public EstadoCombate verificarEstadoCombate() {
+        return hayCombateActual() ? motorCombate.getEstado() : null;
+    }
+
+    public int getIndicePersonajeEnTurno() {
+        Entidad actor = hayCombateActual() ? motorCombate.getActorActual() : null;
+        if (!(actor instanceof Personaje) || !actor.estaVivo()) {
+            return -1;
+        }
+        return partida.getParty().indexOf(actor);
+    }
+
+    public boolean resolverAtaque(int indicePersonaje, int indiceEnemigo) {
+        if (!hayCombateActual()) {
+            return false;
+        }
+        Personaje personaje = seleccionar(partida.getParty(), indicePersonaje);
+        Enemigo enemigo = seleccionar(nivelCombate.getEnemigos(), indiceEnemigo);
+        try {
+            motorCombate.ataque(personaje, enemigo);
+            return true;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return false;
+        }
+    }
+
+    public void resolverDefensa(int indicePersonaje) {
+        if (!hayCombateActual()) {
+            throw new IllegalStateException("No hay un combate activo para defenderse.");
+        }
+        motorCombate.defensa(seleccionar(partida.getParty(), indicePersonaje));
+    }
+
+    public void resolverHabilidadEspecial(int indicePersonaje, int indiceEnemigo) {
+        if (!hayCombateActual() || motorCombate.getEstado() != null) {
+            throw new IllegalStateException("No hay un combate activo para usar habilidades.");
+        }
+        Personaje personaje = seleccionar(partida.getParty(), indicePersonaje);
+        if (personaje == null) {
+            throw new IllegalArgumentException("Seleccioná un personaje.");
+        }
+        Enemigo enemigo = seleccionar(nivelCombate.getEnemigos(), indiceEnemigo);
+        motorCombate.usarHabilidadEspecial(personaje, enemigo);
     }
 
     /** Devuelve null si el uso es válido, o el motivo para mostrar en la vista. */
     public String getMotivoNoPuedeUsarItem(int indicePersonaje, int indiceItem) {
         try {
-            validarUsoItem(indicePersonaje, indiceItem);
+            Item item = seleccionarItem(indiceItem);
+            Personaje personaje = seleccionar(partida.getParty(), indicePersonaje);
+            motorCombate.validarUsoItem(personaje, item);
             return null;
         } catch (IllegalArgumentException | IllegalStateException e) {
             return e.getMessage();
@@ -102,194 +119,40 @@ public class BatallaController {
     }
 
     public void resolverUsoItem(int indicePersonaje, int indiceItem) {
-        ItemConsumible item = validarUsoItem(indicePersonaje, indiceItem);
-        Partida partida = gestorPartida.getPartidaActual();
-        motorCombate.usarItem(partida.getParty().get(indicePersonaje), item, partida.getInventarioGlobal());
-    }
-
-    private ItemConsumible validarUsoItem(int indicePersonaje, int indiceItem) {
-        Partida partida = gestorPartida.getPartidaActual();
-        if (partida == null || verificarEstadoCombate() != null || getMapaActual() == null) {
-            throw new IllegalStateException("No hay un combate activo para usar objetos.");
-        }
-        if (indicePersonaje < 0 || indicePersonaje != getIndicePersonajeEnTurno()) {
-            throw new IllegalStateException("Esperá el turno de un personaje para abrir el inventario.");
-        }
-        List<Item> items = partida.getInventarioGlobal().getItems();
-        if (indiceItem < 0 || indiceItem >= items.size()) {
-            throw new IllegalArgumentException("Elegí un objeto del inventario.");
-        }
-        if (!(items.get(indiceItem) instanceof ItemConsumible)) {
-            throw new IllegalArgumentException("Los equipables no se pueden usar como consumibles en batalla.");
-        }
-        ItemConsumible consumible = (ItemConsumible) items.get(indiceItem);
-        consumible.validarUso(partida.getParty().get(indicePersonaje));
-        return consumible;
-    }
-
-    private Mapa obtenerMapaActual() {
-        Partida partida = gestorPartida.getPartidaActual();
-        return partida == null ? null : partida.getMapaActual();
-    }
-
-    private CombatienteDTO crearCombatiente(Entidad entidad, String rutaImagen, String nombreRecurso) {
-        return new CombatienteDTO(entidad.getNombre(), entidad.getClass().getSimpleName(), rutaImagen,
-                entidad.getVidaActual(), entidad.getVidaMax(), nombreRecurso,
-                entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual());
-    }
-
-    // TODO: exponer habilidades.
-    // Avanza la energía de todos; si le toca a un enemigo, decide solo qué hace
-    public void avanzarCombate() {
-        motorCombate.avanzarEnergia();
-
-        Entidad actor = motorCombate.getActorActual();
-
-        if (!(actor instanceof Enemigo)) {
-            return; // Todavía no hay actor o esperamos al jugador.
-        }
-
-        Enemigo enemigo = (Enemigo) actor;
-
-        // Arma la lista de personajes que siguen vivos
-        List<Personaje> personajesVivos = new ArrayList<>();
-        for (Personaje personaje : gestorPartida.getPartidaActual().getParty()) {
-            if (personaje.estaVivo()) {
-                personajesVivos.add(personaje);
-            }
-        }
-
-        if (personajesVivos.isEmpty()) {
-            return;
-        }
-
-        // Efectos de inicio de turno (por ejemplo, la fase de furia del jefe)
-        enemigo.alIniciarTurno();
-
-        Personaje objetivo = enemigo.seleccionarObjetivo(personajesVivos);
-
-        // Si le alcanza el recurso y sale el sorteo usa su habilidad; si no, ataque normal
-        if (enemigo.quiereUsarHabilidad()) {
-            motorCombate.habilidadEnemigo(enemigo, objetivo, personajesVivos);
-        } else {
-            motorCombate.ataque(enemigo, objetivo);
-            enemigo.recuperarRecursoPorAtaque();
-        }
-    }
-
-    public int getIndicePersonajeEnTurno() {
-        Entidad actor = motorCombate.getActorActual();
-        if (!(actor instanceof Personaje) || !actor.estaVivo()) {
-            return -1;
-        }
-        return gestorPartida.getPartidaActual().getParty().indexOf(actor);
-    }
-
-    public boolean resolverAtaque(int indicePersonaje, int indiceEnemigo) {
-        List<Personaje> party = gestorPartida.getPartidaActual().getParty();
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        if (nivel == null || indicePersonaje < 0 || indicePersonaje >= party.size()
-                || indiceEnemigo < 0 || indiceEnemigo >= nivel.getEnemigos().size()) {
-            return false;
-        }
-
-        Personaje personaje = party.get(indicePersonaje);
-        Enemigo enemigo = nivel.getEnemigos().get(indiceEnemigo);
-        personaje.resetEstado();
-        if (indicePersonaje != getIndicePersonajeEnTurno() || !enemigo.estaVivo()) {
-            return false;
-        }
-        motorCombate.ataque(personaje, enemigo);
-        return true;
-    }
-
-      // Recibe la habilidad elegida en la pantalla, valida la selección y la manda al motor
-    public void resolverHabilidadEspecial(int indicePersonaje, int indiceEnemigo) {
-        Partida partida = gestorPartida.getPartidaActual();
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        // Tiene que haber un combate en curso
-        if (partida == null || nivel == null || verificarEstadoCombate() != null) {
-            throw new IllegalStateException("No hay un combate activo para usar habilidades.");
-        }
-
-        List<Personaje> party = partida.getParty();
-        List<Enemigo> enemigos = nivel.getEnemigos();
-        // El personaje seleccionado tiene que existir
-        if (indicePersonaje < 0 || indicePersonaje >= party.size()) {
-            throw new IllegalArgumentException("Seleccioná un personaje.");
-        }
-
-        // Y tiene que ser su turno y estar vivo
-        Personaje personaje = party.get(indicePersonaje);
-        if (indicePersonaje != getIndicePersonajeEnTurno() || !personaje.estaVivo()) {
-            throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
-        }
-
-        // Las habilidades de apoyo no necesitan que se elija un enemigo
-        if (personaje.esHabilidadDeApoyo()) {
-            motorCombate.usarHabilidadEspecial(personaje, null);
-            return;
-        }
-
-        // Las habilidades de daño necesitan un enemigo seleccionado y vivo
-        if (indiceEnemigo < 0 || indiceEnemigo >= enemigos.size()) {
-            throw new IllegalArgumentException("Seleccioná un enemigo.");
-        }
-        Enemigo enemigo = enemigos.get(indiceEnemigo);
-        if (!enemigo.estaVivo()) {
-            throw new IllegalArgumentException("Elegí un enemigo que siga vivo.");
-        }
-
-        motorCombate.usarHabilidadEspecial(personaje, enemigo);
-    }
-
-    public EstadoCombate verificarEstadoCombate() {
-        Partida partida = gestorPartida.getPartidaActual();
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        EstadoCombate estado = null;
-        if (nivel == null) {
-            // TOOD: Evaluar throw an exception
-            return null;
-        }
-
-        boolean todosEnemigosDerrotados = nivel.getEnemigos().stream().allMatch(enemigo -> !enemigo.estaVivo());
-        boolean todosPersonajesDerrotados = partida.getParty().stream().allMatch(personaje -> !personaje.estaVivo());
-
-        if (todosEnemigosDerrotados) {
-            estado = EstadoCombate.VICTORIA;
-        } else if (todosPersonajesDerrotados) {
-            estado = EstadoCombate.DERROTA;
-        }
-        return estado;
+        Item item = seleccionarItem(indiceItem);
+        Personaje personaje = seleccionar(partida.getParty(), indicePersonaje);
+        motorCombate.usarItem(personaje, item, partida.getInventarioGlobal());
     }
 
     public boolean continuarAlSiguienteNivel() {
-        Mapa mapa = obtenerMapaActual();
-        Nivel nivel = mapa == null ? null : mapa.getNivelActual();
-        if (nivel == null || verificarEstadoCombate() != EstadoCombate.VICTORIA) {
-            throw new IllegalStateException("El nivel solo se puede completar después de una victoria.");
-        }
-
-        int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(nivel.getEnemigos());
-        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(nivel.getEnemigos());
-        gestorPartida.otorgarExperiencia(experienciaGanada);
-        gestorPartida.getPartidaActual().setInventarioGlobal(itemsGanados);
-        nivel.setCompletado(true);
-        if (mapa.getNivelActual() == null) {
-            gestorPartida.avanzarMapa();
-        }
-        return getMapaActual() != null;
+        return gestorPartida.completarNivel(nivelCombate);
     }
 
-    public void resolverDefensa(int indicePersonaje) {
-        List<Personaje> party = gestorPartida.getPartidaActual().getParty();
+    private Item seleccionarItem(int indiceItem) {
+        if (!hayCombateActual() || motorCombate.getEstado() != null) {
+            throw new IllegalStateException("No hay un combate activo para usar objetos.");
+        }
+        Item item = seleccionar(partida.getInventarioGlobal().getItems(), indiceItem);
+        if (item == null) {
+            throw new IllegalArgumentException("Elegí un objeto del inventario.");
+        }
+        return item;
+    }
 
-        Personaje personaje = party.get(indicePersonaje);
+    private boolean hayCombateActual() {
+        return nivelCombate != null && partida == gestorPartida.getPartidaActual() && nivelCombate == obtenerNivelActual();
+    }
 
-        personaje.defenderse();
-        motorCombate.defensa(personaje);
+    private Mapa obtenerMapaActual() {
+        return partida == null ? null : partida.getMapaActual();
+    }
+
+    private Nivel obtenerNivelActual() {
+        Mapa mapa = obtenerMapaActual();
+        return mapa == null ? null : mapa.getNivelActual();
+    }
+
+    private static <T> T seleccionar(List<T> opciones, int indice) {
+        return indice < 0 || indice >= opciones.size() ? null : opciones.get(indice);
     }
 }
