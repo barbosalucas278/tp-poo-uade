@@ -42,8 +42,17 @@ public class Partida {
      * @param party Lista de personajes a verificar.
      */
     static void validarCantidadMinimaPersonajes(List<Personaje> party) {
-        if (party == null || party.size() < CANTIDAD_MINIMA_PERSONAJES || party.contains(null)) {
+        if (party == null || party.size() < CANTIDAD_MINIMA_PERSONAJES) {
             throw new IllegalArgumentException("La party debe tener al menos dos personajes.");
+        }
+        for (Personaje personaje : party) {
+            validarPersonaje(personaje);
+        }
+    }
+
+    private static void validarPersonaje(Personaje personaje) {
+        if (personaje == null) {
+            throw new IllegalArgumentException("La party no puede tener personajes nulos.");
         }
     }
 
@@ -53,6 +62,7 @@ public class Partida {
      * @param personaje Personaje a incorporar al equipo.
      */
     public void agregarPersonaje(Personaje personaje) {
+        validarPersonaje(personaje);
         party.add(personaje);
     }
 
@@ -60,8 +70,12 @@ public class Partida {
      * Remueve un personaje existente de la party.
      *
      * @param personaje Personaje a quitar del equipo.
+     * @throws IllegalStateException si la party quedaría por debajo del mínimo.
      */
     public void removerPersonaje(Personaje personaje) {
+        if (party.size() <= CANTIDAD_MINIMA_PERSONAJES && party.contains(personaje)) {
+            throw new IllegalStateException("La party debe tener al menos dos personajes.");
+        }
         party.remove(personaje);
     }
 
