@@ -420,29 +420,8 @@ public class PantallaBatalla extends JFrame {
                         : "Atacar con " + personajeSeleccionado.getNombre());
         btnDefender.setEnabled(personajeSeleccionado != null);
         btnHabilidadPrincipal.setEnabled(personajeSeleccionado != null);
-        btnHabilidadPrincipal.setText(nombreHabilidad());
-    }
-
-    private String nombreHabilidad() {
-        if (personajeSeleccionado == null) {
-            return "Habilidad especial";
-        }
-        switch (personajeSeleccionado.getClase()) {
-            case "Arquero":
-                return "Disparo Certero";
-            case "Asesino":
-                return "Daga Mortal";
-            case "Curador":
-                return "Sanacion";
-            case "Guerrero":
-                return "Embestida";
-            case "Invocador":
-                return "Alianza Animal";
-            case "Mago":
-                return "Bola de fuego";
-            default:
-                return "Habilidad especial";
-        }
+        btnHabilidadPrincipal.setText(personajeSeleccionado == null ? "Habilidad especial"
+                : personajeSeleccionado.getNombreHabilidad());
     }
 
     private void mostrarAccionPendiente(String accion) {

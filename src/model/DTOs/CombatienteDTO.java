@@ -11,10 +11,11 @@ public final class CombatienteDTO {
     private final int recursoActual;
     private final int recursoMax;
     private final int energiaActual;
+    private final String nombreHabilidad;
 
     public CombatienteDTO(String nombre, String clase, String rutaImagen,
             int vidaActual, int vidaMax, String nombreRecurso,
-            int recursoActual, int recursoMax, int energiaActual) {
+            int recursoActual, int recursoMax, int energiaActual, String nombreHabilidad) {
         this.nombre = nombre;
         this.clase = clase;
         this.rutaImagen = rutaImagen;
@@ -24,6 +25,7 @@ public final class CombatienteDTO {
         this.recursoActual = recursoActual;
         this.recursoMax = recursoMax;
         this.energiaActual = energiaActual;
+        this.nombreHabilidad = nombreHabilidad;
     }
 
     public String getNombre() {
@@ -64,5 +66,9 @@ public final class CombatienteDTO {
 
     public int getEnergiaMax() {
         return 100;
+    }
+
+    public String getNombreHabilidad() {
+        return nombreHabilidad;
     }
 }

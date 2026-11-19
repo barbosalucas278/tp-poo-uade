@@ -32,6 +32,11 @@ public class Asesino extends Personaje {
         return dagaMortal();
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Daga Mortal";
+    }
+
     /** Ataca con la daga y sortea si es crítico. */
     private int dagaMortal() {
         int danio = (int) Math.round(atacar() * 1.40);

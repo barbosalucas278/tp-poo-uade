@@ -30,7 +30,8 @@ class BatallaMapper {
     static List<CombatienteDTO> aPartyDTO(List<Personaje> personajes) {
         List<CombatienteDTO> party = new ArrayList<>();
         for (Personaje personaje : personajes) {
-            party.add(aCombatiente(personaje, personaje.getRutaImagen(), personaje.getNombreRecurso()));
+            party.add(aCombatiente(personaje, personaje.getRutaImagen(),
+                    personaje.getNombreRecurso(), personaje.getNombreHabilidad()));
         }
         return party;
     }
@@ -38,7 +39,7 @@ class BatallaMapper {
     static List<CombatienteDTO> aEnemigosDTO(List<Enemigo> enemigos) {
         List<CombatienteDTO> resultado = new ArrayList<>();
         for (Enemigo enemigo : enemigos) {
-            resultado.add(aCombatiente(enemigo, ResourcesHelper.getRutaImagenEnemigo(enemigo.getTipo()), "VIGOR"));
+            resultado.add(aCombatiente(enemigo, ResourcesHelper.getRutaImagenEnemigo(enemigo.getTipo()), "VIGOR", null));
         }
         return Collections.unmodifiableList(resultado);
     }
@@ -53,9 +54,10 @@ class BatallaMapper {
         return resultado;
     }
 
-    private static CombatienteDTO aCombatiente(Entidad entidad, String rutaImagen, String nombreRecurso) {
+    private static CombatienteDTO aCombatiente(Entidad entidad, String rutaImagen, String nombreRecurso,
+            String nombreHabilidad) {
         return new CombatienteDTO(entidad.getNombre(), entidad.getClass().getSimpleName(), rutaImagen,
                 entidad.getVidaActual(), entidad.getVidaMax(), nombreRecurso,
-                entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual());
+                entidad.getRecursoActual(), entidad.getRecursoMax(), entidad.getEnergiaActual(), nombreHabilidad);
     }
 }

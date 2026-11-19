@@ -32,6 +32,11 @@ public class Invocador extends Personaje {
         return alianzaAnimal(); // Habilidad especial del Invocador: devuelve el daño que hace Alianza Animal
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Alianza Animal";
+    }
+
    /** Calcula el daño del animal invocado. */
     private int alianzaAnimal() {
         return (int) Math.round(atacar() * 1.10) + espiritu;  // El animal ataca con el 110 % más el espíritu del invocador

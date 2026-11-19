@@ -37,6 +37,11 @@ public class Curador extends Personaje {
         return sanacion();
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Sanacion";
+    }
+
     /** Calcula la curación; el motor la aplica a cada aliado vivo. */
     private int sanacion() {
         return fe * 2;

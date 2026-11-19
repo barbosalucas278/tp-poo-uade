@@ -30,6 +30,11 @@ public class Arquero extends Personaje {
         return disparoCertero();
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Disparo Certero";
+    }
+
     /** Calcula el daño de Disparo Certero. */
     private int disparoCertero() {
         return (int) Math.round(atacar() * 1.50) + punteria;

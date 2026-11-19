@@ -29,6 +29,11 @@ public class Mago extends Personaje {
         return bolaDeFuego();
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Bola de fuego";
+    }
+
     /** Calcula el daño de Bola de fuego. */
     private int bolaDeFuego() {
         int danio = (int) Math.round(atacar() * 1.30) + intelecto;

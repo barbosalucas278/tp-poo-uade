@@ -36,6 +36,11 @@ public class Guerrero extends Personaje {
         return embestida(); 
     }
 
+    @Override
+    public String getNombreHabilidad() {
+        return "Embestida";
+    }
+
     /** Carga contra el enemigo y calcula el daño de la embestida. */
     private int embestida() {
         return atacar() + fuerza;
