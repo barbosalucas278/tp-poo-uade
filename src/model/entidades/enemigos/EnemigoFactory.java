@@ -1,65 +1,28 @@
 package model.entidades.enemigos;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import helpers.entidades.EstadisticasEnemigos;
-import helpers.entidades.StatsConfigEnemigos;
 
-/**
- * EnemigoFactory
- */
 public class EnemigoFactory {
+    private static final Map<TipoEnemigo, ConfiguracionCreacion> CONFIGURACIONES = cargarConfiguraciones();
+
+    private static Map<TipoEnemigo, ConfiguracionCreacion> cargarConfiguraciones() {
+        Map<TipoEnemigo, ConfiguracionCreacion> configuraciones = new HashMap<>();
+        configuraciones.put(TipoEnemigo.SLIME, new ConfiguracionCreacion(new CreadorSlime(), 10, 2, 1, 5));
+        configuraciones.put(TipoEnemigo.ESQUELETO, new ConfiguracionCreacion(new CreadorEsqueleto(), 15, 3, 1, 10));
+        configuraciones.put(TipoEnemigo.ORCO, new ConfiguracionCreacion(new CreadorOrco(), 25, 4, 2, 20));
+        configuraciones.put(TipoEnemigo.DRAGON, new ConfiguracionCreacion(new CreadorDragon(), 60, 5, 2, 50));
+        return configuraciones;
+    }
+
     public static Enemigo crearEnemigo(TipoEnemigo tipo, int nivel) {
-        int aumento = nivel - 1;
-        switch (tipo) {
-            case TipoEnemigo.SLIME:
-                StatsConfigEnemigos stats = EstadisticasEnemigos.obtener(TipoEnemigo.SLIME);
-                
-                return new Minion(
-                        stats.getNombre(),
-                        stats.getVida() + aumento * 10,
-                        stats.getRecursoMax(),
-                        stats.getAtaque() + aumento * 2,
-                        stats.getDefensa() + aumento,
-                        stats.getVelocidad(),
-                        nivel,
-                        stats.getExperiencia() + aumento * 5);
-
-            case TipoEnemigo.ESQUELETO:
-                stats = EstadisticasEnemigos.obtener(TipoEnemigo.ESQUELETO);
-                return new Estandar(
-                        stats.getNombre(),
-                        stats.getVida() + aumento * 15,
-                        stats.getRecursoMax(),
-                        stats.getAtaque() + aumento * 3,
-                        stats.getDefensa() + aumento,
-                        stats.getVelocidad(),
-                        nivel,
-                        stats.getExperiencia() + aumento * 10);
-
-            case TipoEnemigo.ORCO:
-                stats = EstadisticasEnemigos.obtener(TipoEnemigo.ORCO);
-                return new Elite(
-                        stats.getNombre(),
-                        stats.getVida() + aumento * 25,
-                        stats.getRecursoMax(),
-                        stats.getAtaque() + aumento * 4,
-                        stats.getDefensa() + aumento * 2,
-                        stats.getVelocidad(),
-                        nivel,
-                        stats.getExperiencia() + aumento * 20);
-
-            case TipoEnemigo.DRAGON:
-                stats = EstadisticasEnemigos.obtener(TipoEnemigo.DRAGON);
-                return new Jefe(
-                        stats.getNombre(),
-                        stats.getVida() + aumento * 60,
-                        stats.getRecursoMax(),
-                        stats.getAtaque() + aumento * 5,
-                        stats.getDefensa() + aumento * 2,
-                        stats.getVelocidad(),
-                        nivel,
-                        stats.getExperiencia() + aumento * 50);
-            default:
-                throw new IllegalArgumentException("Tipo de enemigo inválido");
+        ConfiguracionCreacion configuracion = CONFIGURACIONES.get(tipo);
+        if (configuracion == null) {
+            throw new IllegalArgumentException("Tipo de enemigo inválido");
         }
+
+        return configuracion.crear(EstadisticasEnemigos.obtener(tipo), nivel);
     }
 }

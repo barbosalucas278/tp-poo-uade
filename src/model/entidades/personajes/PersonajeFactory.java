@@ -1,82 +1,33 @@
 package model.entidades.personajes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import helpers.entidades.EstadisticasBasePersonajes;
 import helpers.entidades.StatsBaseConfigPerosnajes;
 
 public class PersonajeFactory {
-        public static Personaje crearPersonaje(String nombre, TipoPersonaje tipo, String rutaImagen) {
+    private static final Map<TipoPersonaje, CreadorPersonaje> CREADORES = cargarCreadores();
 
-        switch (tipo) {
-            case TipoPersonaje.GUERRERO:
-                StatsBaseConfigPerosnajes stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.GUERRERO);
-                
-                return new Guerrero(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            case TipoPersonaje.MAGO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.MAGO);
-                return new Mago(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            case TipoPersonaje.CURADOR:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.CURADOR);
-                return new Curador(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            case TipoPersonaje.ARQUERO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ARQUERO);
-                return new Arquero(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            case TipoPersonaje.ASESINO:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.ASESINO);
-                return new Asesino(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            case TipoPersonaje.INVOCADOR:
-                stats = EstadisticasBasePersonajes.obtener(TipoPersonaje.INVOCADOR);
-                return new Invocador(
-                        nombre,
-                        stats.getVida(),
-                        stats.getRecursoMax(),
-                        stats.getAtaque(),
-                        stats.getDefensa(),
-                        stats.getVelocidad(),
-                        rutaImagen);
-
-            default:
-                throw new IllegalArgumentException("Tipo de personaje inválido");
-        }
+    private static Map<TipoPersonaje, CreadorPersonaje> cargarCreadores() {
+        Map<TipoPersonaje, CreadorPersonaje> creadores = new HashMap<>();
+        creadores.put(TipoPersonaje.GUERRERO, new CreadorGuerrero());
+        creadores.put(TipoPersonaje.MAGO, new CreadorMago());
+        creadores.put(TipoPersonaje.CURADOR, new CreadorCurador());
+        creadores.put(TipoPersonaje.ARQUERO, new CreadorArquero());
+        creadores.put(TipoPersonaje.ASESINO, new CreadorAsesino());
+        creadores.put(TipoPersonaje.INVOCADOR, new CreadorInvocador());
+        return creadores;
     }
 
+    public static Personaje crearPersonaje(String nombre, TipoPersonaje tipo, String rutaImagen) {
+        CreadorPersonaje creador = CREADORES.get(tipo);
+        if (creador == null) {
+            throw new IllegalArgumentException("Tipo de personaje inválido");
+        }
+
+        StatsBaseConfigPerosnajes stats = EstadisticasBasePersonajes.obtener(tipo);
+        return creador.crear(nombre, stats.getVida(), stats.getRecursoMax(), stats.getAtaque(),
+                stats.getDefensa(), stats.getVelocidad(), rutaImagen);
+    }
 }
