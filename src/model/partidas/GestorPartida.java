@@ -62,16 +62,19 @@ public class GestorPartida {
         return hayNivelPendiente();
     }
 
+    /** Avanza al siguiente mapa cuando se completaron todos los niveles del actual. */
     public void avanzarMapa() {
-        if (partidaActual != null) {
-            Mapa mapaActual = partidaActual.getMapaActual();
-            if (mapaActual != null) {
-                mapaActual.setCompletado(true);
-                int numeroMapaSiguiente = mapaActual.getNumeroMapa() + 1;
-                Mapa nuevoMapa = generarNuevoMapa(numeroMapaSiguiente);
-                partidaActual.agregarMapa(nuevoMapa);
-            }
+        Mapa mapaActual = partidaActual == null ? null : partidaActual.getMapaActual();
+        if (mapaActual == null) {
+            return;
         }
+        if (mapaActual.getNivelActual() != null) {
+            throw new IllegalStateException("Completá todos los niveles antes de avanzar de mapa.");
+        }
+
+        Mapa nuevoMapa = generarNuevoMapa(mapaActual.getNumeroMapa() + 1);
+        mapaActual.setCompletado(true);
+        partidaActual.agregarMapa(nuevoMapa);
     }
 
     private Mapa generarNuevoMapa(int numeroMapa) {

@@ -1,9 +1,12 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import model.entidades.enemigos.Enemigo;
 import model.entidades.personajes.Guerrero;
 import model.entidades.personajes.Personaje;
+import model.partidas.GestorPartida;
 import model.partidas.Mapa;
+import model.partidas.Nivel;
 import model.partidas.Partida;
 
 /** Pruebas de las reglas de la partida sin pasar por la pantalla. */
@@ -12,6 +15,7 @@ public class PartidaTest {
 
     public static void main(String[] args) {
         partidaProtegeElEquipoMinimo();
+        gestorAvanzaMapaSoloAlCompletarLosNiveles();
         System.out.println("OK: " + verificaciones + " verificaciones de partida.");
     }
 
@@ -37,6 +41,38 @@ public class PartidaTest {
         List<Personaje> conNulo = new ArrayList<>(List.of(primero));
         conNulo.add(null);
         esperarRechazo(() -> new Partida("Con integrante nulo", conNulo, mapa));
+    }
+
+    private static void gestorAvanzaMapaSoloAlCompletarLosNiveles() {
+        GestorPartida gestor = GestorPartida.getInstance();
+        Partida partida = gestor.nuevaPartida("Progresión", List.of(nuevoGuerrero("Primero"), nuevoGuerrero("Segundo")));
+        Mapa mapa = partida.getMapaActual();
+
+        esperarRechazo(gestor::avanzarMapa);
+        verificar(partida.getMapas().equals(List.of(mapa)) && !mapa.isCompletado(),
+                "Una llamada directa no debe avanzar mientras queden niveles.");
+
+        completarNivel(gestor, mapa.getNivelActual());
+        verificar(partida.getMapaActual() == mapa && mapa.getNivelActual() != null,
+                "Una victoria intermedia debe dejar la partida en el mismo mapa.");
+
+        for (Nivel nivel : mapa.getNiveles()) {
+            if (!nivel.isCompletado()) {
+                completarNivel(gestor, nivel);
+            }
+        }
+
+        verificar(mapa.isCompletado() && partida.getMapas().size() == 2
+                && partida.getMapaActual().getNumeroMapa() == mapa.getNumeroMapa() + 1,
+                "La última victoria debe habilitar exactamente un mapa nuevo.");
+        esperarRechazo(gestor::avanzarMapa);
+    }
+
+    private static void completarNivel(GestorPartida gestor, Nivel nivel) {
+        for (Enemigo enemigo : nivel.getEnemigos()) {
+            enemigo.setVidaActual(0);
+        }
+        gestor.completarNivel(nivel);
     }
 
     private static Personaje nuevoGuerrero(String nombre) {
