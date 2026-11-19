@@ -1,7 +1,6 @@
 package model.partidas;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import model.entidades.personajes.Personaje;
 import model.objetos.Inventario;
@@ -101,11 +100,11 @@ public class Partida {
     }
 
     public List<Personaje> getParty() {
-        return Collections.unmodifiableList(party);
+        return new ArrayList<>(party);
     }
 
     public List<Mapa> getMapas() {
-        return mapas;
+        return new ArrayList<>(mapas);
     }
 
 }

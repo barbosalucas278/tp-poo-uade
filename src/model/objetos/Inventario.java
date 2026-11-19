@@ -1,5 +1,6 @@
 package model.objetos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import model.entidades.personajes.Personaje;
@@ -12,11 +13,11 @@ public class Inventario {
     private int capacidadMax = 20;
 
     public Inventario() {
-        this.items = new java.util.ArrayList<>();
+        this.items = new ArrayList<>();
     }
 
     public List<Item> getItems() {
-        return items;
+        return new ArrayList<>(items);
     }
 
     public boolean agregarItem(Item item) {
