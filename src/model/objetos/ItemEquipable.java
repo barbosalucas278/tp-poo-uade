@@ -44,4 +44,9 @@ public class ItemEquipable extends Item {
     public TipoObjeto getTipo() {
         return tipo;
     }
+
+    @Override
+    public void registrarEn(RegistroItems registro) {
+        registro.registrarEquipable(this);
+    }
 }

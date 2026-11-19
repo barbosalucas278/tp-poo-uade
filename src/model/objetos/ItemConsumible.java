@@ -25,4 +25,9 @@ public abstract class ItemConsumible extends Item {
     public abstract void aplicarEfecto(Personaje personaje);
 
     public abstract TipoItemConsumible getTipo();
+
+    @Override
+    public void registrarEn(RegistroItems registro) {
+        registro.registrarConsumible(this);
+    }
 }

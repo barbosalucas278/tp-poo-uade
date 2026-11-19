@@ -15,9 +15,9 @@ import model.entidades.enemigos.EnemigoFactory;
 import model.entidades.personajes.Personaje;
 import model.entidades.personajes.PersonajeFactory;
 import model.objetos.Item;
-import model.objetos.ItemConsumible;
 import model.objetos.ItemEquipable;
 import model.objetos.ItemsConsumiblesFactory;
+import model.objetos.RegistroItems;
 import model.partidas.Mapa;
 import model.partidas.Nivel;
 import model.partidas.Partida;
@@ -45,21 +45,15 @@ public class PartidaMapper {
             p.experienciaActual = personaje.getExperienciaActual();
             p.experienciaSiguienteNivel = personaje.getExperienciaSiguienteNivel();
             for (ItemEquipable equipado : personaje.getItemsEquipados()) {
-                p.equipados.add(aItemGuardado(equipado));
+                p.equipados.add(RegistroItemsGuardados.aItemGuardado(equipado));
             }
             snapshot.party.add(p);
         }
 
+        RegistroItems registroItems = new RegistroItemsGuardados(snapshot);
         for (Item item : partida.getInventarioGlobal().getItems()) {
-            if (item instanceof ItemEquipable) {
-                snapshot.inventario.add(aItemGuardado((ItemEquipable) item));
-            } else if (item instanceof ItemConsumible) {
-                // Alcanza con tipo y rareza: al cargar, ItemsConsumiblesFactory recalcula nombre, descripción y cantidad
-                ItemConsumible consumible = (ItemConsumible) item;
-                ConsumibleGuardado c = new ConsumibleGuardado();
-                c.tipo = consumible.getTipo();
-                c.rareza = consumible.getRareza();
-                snapshot.consumibles.add(c);
+            if (item != null) {
+                item.registrarEn(registroItems);
             }
         }
 
@@ -137,16 +131,6 @@ public class PartidaMapper {
         }
 
         return partida;
-    }
-
-    private static ItemGuardado aItemGuardado(ItemEquipable equipable) {
-        ItemGuardado i = new ItemGuardado();
-        i.nombre = equipable.getNombre();
-        i.descripcion = equipable.getDescripcion();
-        i.tipo = equipable.getTipo();
-        i.bonusAtaque = equipable.getBonusAtaque();
-        i.bonusDefensa = equipable.getBonusDefensa();
-        return i;
     }
 
     private static ItemEquipable aItemEquipable(ItemGuardado i) {

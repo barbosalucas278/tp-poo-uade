@@ -30,4 +30,6 @@ public abstract class Item {
         return rareza;
     }
 
+    public abstract void registrarEn(RegistroItems registro);
+
 }
