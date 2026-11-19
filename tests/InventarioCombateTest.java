@@ -51,6 +51,8 @@ public class InventarioCombateTest {
         motorControlaCostoDeHabilidadesDeTodasLasClases();
         motorControlaCostoDeHabilidadesDeEnemigos();
         motorResuelveTurnoEnemigoYDetectaDerrota();
+        motorRechazaAccionesConElCombateTerminado();
+        motorNoAvanzaEnergiaTrasLaDerrota();
         regeneracionDeRecursoEsResponsabilidadDelPersonaje();
         controllerValidaYExponeElInventario();
         controllerAplicaRecompensasUnaSolaVez();
@@ -322,6 +324,40 @@ public class InventarioCombateTest {
                 "El ataque normal debe recuperar recurso y finalizar el turno enemigo.");
         personaje.setVidaActual(0);
         verificar(motor.getEstado() == EstadoCombate.DERROTA, "El motor debe detectar la derrota de la party.");
+    }
+
+    private static void motorRechazaAccionesConElCombateTerminado() {
+        Curador curador = new Curador("Curador", 100, 100, 20, 5, 10, "");
+        Escenario escenario = new Escenario(curador);
+        curador.setVidaActual(50);
+        escenario.aliado.setVidaActual(50);
+        PocionVida pocion = new PocionVida("Vida", "Cura", 25);
+        escenario.inventario.agregarItem(pocion);
+        escenario.enemigo.setVidaActual(0);
+
+        verificar(escenario.motor.getEstado() == EstadoCombate.VICTORIA, "La batalla ya está ganada.");
+        esperarRechazo(() -> escenario.motor.validarUsoItem(curador, pocion));
+        rechazarSinConsumir(escenario, curador, pocion);
+        esperarRechazo(() -> escenario.motor.usarHabilidadEspecial(curador, null));
+        esperarRechazo(() -> escenario.motor.defensa(curador));
+        verificar(curador.getRecursoActual() == 100 && escenario.aliado.getVidaActual() == 50,
+                "Una habilidad rechazada no debe gastar recursos ni curar al grupo.");
+        curador.recibirDanio(20);
+        verificar(curador.getVidaActual() == 35, "La defensa rechazada no debe cambiar la postura.");
+    }
+
+    private static void motorNoAvanzaEnergiaTrasLaDerrota() {
+        Guerrero personaje = nuevoGuerrero();
+        personaje.setVidaActual(0);
+        Enemigo enemigo = new Minion("Slime", 100, 100, 25, 5, 10, 1, 1);
+        enemigo.acumularEnergia(90);
+        MotorCombate motor = new MotorCombate(List.of(personaje), List.of(enemigo));
+
+        motor.avanzarEnergia();
+
+        verificar(motor.getEstado() == EstadoCombate.DERROTA, "La batalla ya está perdida.");
+        verificar(motor.getActorActual() == null && enemigo.getEnergiaActual() == 90,
+                "El motor no debe acumular energía ni asignar turnos después de la derrota.");
     }
 
     private static void regeneracionDeRecursoEsResponsabilidadDelPersonaje() {

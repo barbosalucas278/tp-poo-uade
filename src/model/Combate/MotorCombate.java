@@ -36,11 +36,8 @@ public class MotorCombate {
 
     /** Avanza los turnos y resuelve la acción automáticamente si le toca a un enemigo. */
     public void avanzarCombate() {
-        if (getEstado() != null) {
-            return;
-        }
         avanzarEnergia();
-        if (!(actorActual instanceof Enemigo)) {
+        if (!(actorActual instanceof Enemigo) || getEstado() != null) {
             return;
         }
 
@@ -73,14 +70,20 @@ public class MotorCombate {
         return null;
     }
 
+    private void validarCombateActivo(String accion) {
+        if (getEstado() != null) {
+            throw new IllegalStateException("No hay un combate activo para " + accion + ".");
+        }
+    }
+
     /**
      * Si no hay un actor actual, busca uno listo; si no lo encuentra, avanza
      * la energía de los participantes vivos y vuelve a buscar. Los personajes
-     * también regeneran su recurso durante el tick.
+     * también regeneran su recurso durante el tick mientras siga el combate.
      */
     public void avanzarEnergia() {
-        if (actorActual != null) {
-            return; // Esperamos que termine su acción.
+        if (actorActual != null || getEstado() != null) {
+            return;
         }
 
         actorActual = buscarActorListo(); // Primero atendemos a quienes ya tenían energía suficiente.
@@ -124,10 +127,11 @@ public class MotorCombate {
      *
      * @param atacante entidad que realiza el ataque
      * @param defensor entidad que recibe el daño
-     * @throws IllegalStateException si el atacante no tiene el turno
+     * @throws IllegalStateException si terminó el combate o el atacante no tiene el turno
      * @throws IllegalArgumentException si el defensor no es un objetivo hostil válido y vivo                            
      */
     public void ataque(Entidad atacante, Entidad defensor) {
+        validarCombateActivo("atacar");
         if (atacante == null || atacante != actorActual || !atacante.estaVivo()) {
             throw new IllegalStateException("No es el turno del atacante.");
         }
@@ -149,10 +153,12 @@ public class MotorCombate {
      *
      * @param atacante personaje que usa la habilidad
      * @param objetivo entidad objetivo de una habilidad de daño; puede ser {@code null} para una habilidad de apoyo           
-     * @throws IllegalStateException si el personaje no tiene el turno o no cuenta con el recurso necesario    
+     * @throws IllegalStateException si terminó el combate, el personaje no tiene el turno
+     *                               o no cuenta con el recurso necesario
      * @throws IllegalArgumentException si el objetivo de daño no es válido
      */
     public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
+        validarCombateActivo("usar habilidades");
         if (atacante == null || atacante != actorActual || !atacante.estaVivo()) {
             throw new IllegalStateException("Esperá el turno de un personaje para usar su habilidad.");
         }
@@ -215,11 +221,12 @@ public class MotorCombate {
      * @param enemigo enemigo que usa la habilidad
      * @param objetivo personaje objetivo para una habilidad individual
      * @param personajesVivos personajes vivos afectados por una habilidad de área
-     * @throws IllegalStateException si el enemigo no tiene el turno o no cuenta
-     *                               con el recurso necesario
+     * @throws IllegalStateException si terminó el combate, el enemigo no tiene el turno
+     *                               o no cuenta con el recurso necesario
      * @throws IllegalArgumentException si el objetivo individual no es válido
      */
     public void habilidadEnemigo(Enemigo enemigo, Personaje objetivo, List<Personaje> personajesVivos) {
+        validarCombateActivo("usar habilidades");
         // Solo puede actuar el enemigo al que le toca
         if (enemigo != actorActual) {
             throw new IllegalStateException("No es el turno del enemigo.");
@@ -289,9 +296,10 @@ public class MotorCombate {
      * Aplica la defensa del actor actual y finaliza su acción.
      *
      * @param personaje entidad que realiza la defensa
-     * @throws IllegalStateException si la entidad no está viva o no tiene el turno
+     * @throws IllegalStateException si terminó el combate, la entidad no está viva o no tiene el turno
      */
     public void defensa(Entidad personaje) {
+        validarCombateActivo("defenderse");
         if (personaje == null || personaje != actorActual || !personaje.estaVivo()) {
             throw new IllegalStateException("Esperá el turno de la entidad para defenderte.");
         }
@@ -311,7 +319,7 @@ public class MotorCombate {
      * @param actor personaje que usa el objeto
      * @param item objeto consumible que se quiere usar
      * @param inventario inventario del que se consume el objeto
-     * @throws IllegalStateException si el personaje no tiene el turno o no está vivo
+     * @throws IllegalStateException si terminó el combate, el personaje no tiene el turno o no está vivo
      * @throws IllegalArgumentException si el personaje no participa en el combate
      *                                  o el objeto no está disponible o no es consumible
      */
@@ -325,6 +333,7 @@ public class MotorCombate {
     }
 
     private void validarTurnoParaUsarItem(Personaje actor) {
+        validarCombateActivo("usar objetos");
         if (actor == null || actor != actorActual || !actor.estaVivo()) {
             throw new IllegalStateException("Esperá el turno del personaje para usar un objeto.");
         }

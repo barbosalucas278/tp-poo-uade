@@ -95,7 +95,7 @@ public class BatallaController {
     }
 
     public void resolverHabilidadEspecial(int indicePersonaje, int indiceEnemigo) {
-        if (!hayCombateActual() || motorCombate.getEstado() != null) {
+        if (!hayCombateActual()) {
             throw new IllegalStateException("No hay un combate activo para usar habilidades.");
         }
         Personaje personaje = seleccionar(partida.getParty(), indicePersonaje);
@@ -129,7 +129,7 @@ public class BatallaController {
     }
 
     private Item seleccionarItem(int indiceItem) {
-        if (!hayCombateActual() || motorCombate.getEstado() != null) {
+        if (!hayCombateActual()) {
             throw new IllegalStateException("No hay un combate activo para usar objetos.");
         }
         Item item = seleccionar(partida.getInventarioGlobal().getItems(), indiceItem);
