@@ -55,6 +55,8 @@ public class InventarioCombateTest {
         motorNoAvanzaEnergiaTrasLaDerrota();
         regeneracionDeRecursoEsResponsabilidadDelPersonaje();
         controllerValidaYExponeElInventario();
+        inventarioRechazaDesequiparUnObjetoAjeno();
+        inventarioRespetaCapacidadAlCambiarEquipamiento();
         controllerAplicaRecompensasUnaSolaVez();
         factoryConservaRarezaYTipo();
         System.out.println("OK: " + verificaciones + " verificaciones de inventario y acciones de combate.");
@@ -416,6 +418,54 @@ public class InventarioCombateTest {
         esperarRechazo(() -> controller.resolverUsoItem(0, 1));
         verificar(partida.getInventarioGlobal().getItems().size() == 2,
                 "Un combate terminado no debe permitir consumir objetos.");
+    }
+
+    private static void inventarioRechazaDesequiparUnObjetoAjeno() {
+        Guerrero personaje = nuevoGuerrero();
+        int ataqueBase = personaje.getAtaqueBase();
+        Inventario inventario = new Inventario();
+        ItemEquipable espada = new ItemEquipable("Espada", "", TipoObjeto.ARMA, 5, 0);
+        ItemEquipable ajena = new ItemEquipable("Otra espada", "", TipoObjeto.ARMA, 20, 0);
+        inventario.agregarItem(espada);
+        inventario.equiparItem(espada, personaje);
+
+        esperarRechazo(() -> inventario.desequiparItem(ajena, personaje));
+        verificar(personaje.getItemEquipado(TipoObjeto.ARMA) == espada
+                && personaje.getAtaqueBase() == ataqueBase + 5 && inventario.getItems().isEmpty(),
+                "Desequipar un objeto ajeno debe conservar el arma, el bonus y el inventario.");
+    }
+
+    private static void inventarioRespetaCapacidadAlCambiarEquipamiento() {
+        Guerrero personaje = nuevoGuerrero();
+        int ataqueBase = personaje.getAtaqueBase();
+        Inventario inventario = new Inventario();
+        ItemEquipable anterior = new ItemEquipable("Espada", "", TipoObjeto.ARMA, 5, 0);
+        ItemEquipable nueva = new ItemEquipable("Espada nueva", "", TipoObjeto.ARMA, 8, 0);
+        inventario.agregarItem(anterior);
+        inventario.equiparItem(anterior, personaje);
+        inventario.agregarItem(nueva);
+        for (int i = 1; i < inventario.getCapacidadMax(); i++) {
+            inventario.agregarItem(new PocionVida("Vida", "", 25));
+        }
+
+        esperarRechazo(() -> inventario.desequiparItem(anterior, personaje));
+        verificar(personaje.getItemEquipado(TipoObjeto.ARMA) == anterior
+                && personaje.getAtaqueBase() == ataqueBase + 5
+                && inventario.getItems().size() == inventario.getCapacidadMax(),
+                "Con el inventario lleno, el personaje debe conservar el arma y su bonus.");
+
+        inventario.equiparItem(nueva, personaje);
+        verificar(personaje.getItemEquipado(TipoObjeto.ARMA) == nueva && personaje.getAtaqueBase() == ataqueBase + 8,
+                "El reemplazo debe aplicar solo el bonus del arma nueva.");
+        verificar(inventario.getItems().size() == inventario.getCapacidadMax()
+                && inventario.getItems().contains(anterior) && !inventario.getItems().contains(nueva),
+                "El reemplazo debe intercambiar los objetos aun con el inventario lleno.");
+
+        inventario.removerItem(anterior);
+        inventario.desequiparItem(nueva, personaje);
+        verificar(personaje.getItemEquipado(TipoObjeto.ARMA) == null && personaje.getAtaqueBase() == ataqueBase
+                && inventario.getItems().contains(nueva),
+                "Con lugar libre, desequipar debe retirar el bonus y devolver el objeto.");
     }
 
     private static void controllerAplicaRecompensasUnaSolaVez() {

@@ -43,19 +43,33 @@ public class Inventario {
     }
 
     public void equiparItem(ItemEquipable item, Personaje personaje) {
-        if (items.contains(item)) {
-            // Si ya tenía algo equipado en ese lugar, lo vuelve al inventario
-            ItemEquipable anterior = personaje.getItemEquipado(item.getTipo());
-            if (anterior != null) {
-                desequiparItem(anterior, personaje);
-            }
-            item.aplicarBonus(personaje);
-            personaje.equiparItem(item.getTipo(), item);
-            items.remove(item);
+        if (item == null || !items.contains(item)) {
+            return;
         }
+        TipoObjeto tipo = item.getTipo();
+        if (personaje == null || tipo == null) {
+            throw new IllegalArgumentException("Hace falta un personaje y un tipo de equipamiento válido.");
+        }
+
+        ItemEquipable anterior = personaje.getItemEquipado(tipo);
+        // El objeto que se equipa libera el lugar para el anterior.
+        items.remove(item);
+        if (anterior != null) {
+            anterior.removerBonus(personaje);
+            items.add(anterior);
+        }
+        item.aplicarBonus(personaje);
+        personaje.equiparItem(tipo, item);
     }
 
     public void desequiparItem(ItemEquipable item, Personaje personaje) {
+        if (item == null || personaje == null || personaje.getItemEquipado(item.getTipo()) != item) {
+            throw new IllegalArgumentException("El personaje no tiene equipado ese objeto.");
+        }
+        if (items.size() >= capacidadMax) {
+            throw new IllegalStateException("El inventario está lleno.");
+        }
+
         item.removerBonus(personaje);
         personaje.desequiparItem(item.getTipo());
         items.add(item);
