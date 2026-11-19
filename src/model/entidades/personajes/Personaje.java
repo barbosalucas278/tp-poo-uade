@@ -90,10 +90,6 @@ public abstract class Personaje extends Entidad {
         this.experienciaSiguientenivel = xpSiguiente;
     }
 
-    public abstract int usarHabilidadEspecial();
-
-    public abstract int getCostoHabilidad();
-
     public void regenerarRecurso() {
         generarRecursos(REGENERACION_RECURSO_POR_TICK);
     }

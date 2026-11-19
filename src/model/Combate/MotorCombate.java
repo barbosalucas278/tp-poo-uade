@@ -43,8 +43,7 @@ public class MotorCombate {
             return; // Esperamos que termine su acción.
         }
 
-        // Primero atendemos a quienes ya tenían energía suficiente.
-        actorActual = buscarActorListo();
+        actorActual = buscarActorListo(); // Primero atendemos a quienes ya tenían energía suficiente.
         if (actorActual != null) {
             return;
         }
@@ -86,8 +85,7 @@ public class MotorCombate {
      * @param atacante entidad que realiza el ataque
      * @param defensor entidad que recibe el daño
      * @throws IllegalStateException si el atacante no tiene el turno
-     * @throws IllegalArgumentException si el defensor no es un objetivo hostil
-     *                                  válido y vivo
+     * @throws IllegalArgumentException si el defensor no es un objetivo hostil válido y vivo                            
      */
     public void ataque(Entidad atacante, Entidad defensor) {
         if (atacante != actorActual) {
@@ -107,16 +105,13 @@ public class MotorCombate {
      * del equipo enemigo que participe del combate.
      *
      * @param atacante personaje que usa la habilidad
-     * @param objetivo entidad objetivo de una habilidad de daño; puede ser
-     *                 {@code null} para una habilidad de apoyo
-     * @throws IllegalStateException si el personaje no tiene el turno o no
-     *                               cuenta con el recurso necesario
+     * @param objetivo entidad objetivo de una habilidad de daño; puede ser {@code null} para una habilidad de apoyo           
+     * @throws IllegalStateException si el personaje no tiene el turno o no cuenta con el recurso necesario    
      * @throws IllegalArgumentException si el objetivo de daño no es válido
      */
     public void usarHabilidadEspecial(Personaje atacante, Entidad objetivo) {
-        // Solo puede actuar el personaje al que le toca
-        if (atacante != actorActual) {
-            throw new IllegalStateException("No es el turno del personaje.");
+        if (atacante != actorActual) { // Solo puede actuar el personaje al que le toca
+            throw new IllegalStateException("No es el turno del personaje."); 
         }
 
         // Habilidad de apoyo (Curador): cura a todos los personajes vivos del grupo
@@ -140,7 +135,6 @@ public class MotorCombate {
 
         validarCostoHabilidad(atacante);
 
-        // Cada clase calcula su propio daño (polimorfismo) y el objetivo lo recibe
         int danio = atacante.usarHabilidadEspecial();
         pagarCostoHabilidad(atacante);
         objetivo.recibirDanio(danio);
@@ -153,10 +147,9 @@ public class MotorCombate {
      * @param atacante personaje que intenta usar la habilidad
      * @throws IllegalStateException si no tiene recurso suficiente
      */
-    private void validarCostoHabilidad(Personaje atacante) {
-        if (atacante.getRecursoActual() < atacante.getCostoHabilidad()) {
-            throw new IllegalStateException("No hay suficiente " + atacante.getNombreRecurso()
-                    + " para usar la habilidad especial.");
+    private void validarCostoHabilidad(Entidad entidad) {
+        if (entidad.getRecursoActual() < entidad.getCostoHabilidad()) {
+            throw new IllegalStateException("No hay suficiente recurso para usar la habilidad especial.");
         }
     }
 
@@ -165,8 +158,8 @@ public class MotorCombate {
      *
      * @param atacante personaje que paga el costo
      */
-    private void pagarCostoHabilidad(Personaje atacante) {
-        atacante.consumirRecursos(atacante.getCostoHabilidad());
+    private void pagarCostoHabilidad(Entidad entidad) {
+        entidad.consumirRecursos(entidad.getCostoHabilidad());
     }
 
     /**
@@ -228,27 +221,6 @@ public class MotorCombate {
             return objetivo instanceof Personaje && personajes.contains(objetivo);
         }
         return false;
-    }
-
-    /**
-     * Comprueba que el enemigo tenga el recurso requerido por su habilidad.
-     *
-     * @param enemigo enemigo que intenta usar la habilidad
-     * @throws IllegalStateException si no tiene recurso suficiente
-     */
-    private void validarCostoHabilidad(Enemigo enemigo) {
-        if (enemigo.getRecursoActual() < enemigo.getCostoHabilidad()) {
-            throw new IllegalStateException("No hay suficiente recurso para usar la habilidad especial.");
-        }
-    }
-
-    /**
-     * Descuenta del enemigo el costo de su habilidad especial.
-     *
-     * @param enemigo enemigo que paga el costo
-     */
-    private void pagarCostoHabilidad(Enemigo enemigo) {
-        enemigo.consumirRecursos(enemigo.getCostoHabilidad());
     }
 
     /**

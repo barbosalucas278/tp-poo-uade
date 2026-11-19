@@ -150,4 +150,8 @@ public abstract class Entidad {
     public void resetEstado() {
         this.estaDefendiendose = false;
     }
+
+    public abstract int usarHabilidadEspecial();
+
+    public abstract int getCostoHabilidad();
 }

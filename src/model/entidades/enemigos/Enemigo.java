@@ -27,12 +27,6 @@ public abstract class Enemigo extends Entidad {
 
     public abstract TipoEnemigo getTipo();
 
-    // Habilidad especial del enemigo: cada clase devuelve el daño que hace la suya
-    public abstract int usarHabilidadEspecial();
-
-    // Costo de la habilidad; lo consultan la IA antes de elegirla y el motor al ejecutarla.
-    public abstract int getCostoHabilidad();
-
     // Indica si su habilidad golpea a todo el grupo en vez de a un solo personaje.
     // Por defecto es false; el Jefe la sobrescribe y devuelve true.
     public boolean habilidadAfectaATodos() {
