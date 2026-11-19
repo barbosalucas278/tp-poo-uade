@@ -102,6 +102,10 @@ public abstract class Personaje extends Entidad {
 
     public abstract String getNombreRecurso();
 
+    public boolean usaMana() {
+        return false;
+    }
+
     public abstract String getNombreHabilidad();
 
     public abstract TipoPersonaje getTipo();

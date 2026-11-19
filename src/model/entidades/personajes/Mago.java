@@ -54,6 +54,11 @@ public class Mago extends Personaje {
     }
 
     @Override
+    public boolean usaMana() {
+        return true;
+    }
+
+    @Override
     public TipoPersonaje getTipo() {
         return TipoPersonaje.MAGO;
     }
