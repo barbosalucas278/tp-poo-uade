@@ -20,7 +20,7 @@ public class GestorPartida {
     private static final int MAPA_INICIAL = 1;
     private static final int NIVEL_INICIAL = 1;
     private static GestorPartida instance;
-    public Partida partidaActual;
+    private  Partida partidaActual;
 
     private GestorPartida() {
     }
