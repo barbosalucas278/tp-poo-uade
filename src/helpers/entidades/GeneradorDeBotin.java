@@ -6,7 +6,7 @@ import java.util.Random;
 
 import model.entidades.enemigos.DropStats;
 import model.entidades.enemigos.Enemigo;
-import model.entidades.enemigos.TipoEnemigo;
+import model.objetos.EquipablesFactory;
 import model.objetos.Item;
 import model.objetos.ItemsConsumiblesFactory;
 import model.objetos.TipoItemConsumible;
@@ -14,6 +14,17 @@ import model.objetos.TipoRareza;
 
 public class GeneradorDeBotin {
     private static final Random RANDOM = new Random();
+    private static final int PROBABILIDAD_EQUIPABLE = 30;
+
+    public static List<Item> SortearBotin(List<Enemigo> enemigosDerrotados, boolean primeraVictoria) {
+        List<Item> recompensas = new ArrayList<>();
+        if (primeraVictoria) {
+            recompensas.add(EquipablesFactory.crearArma(TipoRareza.COMUN));
+            recompensas.add(EquipablesFactory.crearArmadura(TipoRareza.COMUN));
+        }
+        recompensas.addAll(SortearBotin(enemigosDerrotados));
+        return recompensas;
+    }
 
     public static List<Item> SortearBotin(List<Enemigo> enemigosDerrotados) {
         List<Item> recompensas = new ArrayList<>();
@@ -23,11 +34,19 @@ public class GeneradorDeBotin {
 
             if (resultado < drop.getProbabilidadDeDrop()) {
                 TipoRareza rareza = sortearRareza(drop.getProbabilidadItemComun(), drop.getProbabilidadItemRaro());
-                TipoItemConsumible tipo = sortearTipo();
-                recompensas.add(ItemsConsumiblesFactory.CrearItemConsumible(rareza, tipo));
+                recompensas.add(sortearObjeto(rareza));
             }
         }
         return recompensas;
+    }
+
+    private static Item sortearObjeto(TipoRareza rareza) {
+        if (RANDOM.nextInt(100) < PROBABILIDAD_EQUIPABLE) {
+            return RANDOM.nextBoolean()
+                    ? EquipablesFactory.crearArma(rareza)
+                    : EquipablesFactory.crearArmadura(rareza);
+        }
+        return ItemsConsumiblesFactory.CrearItemConsumible(rareza, sortearTipo());
     }
 
     private static TipoRareza sortearRareza(int porcentajeComun, int porcentajeRaro) {

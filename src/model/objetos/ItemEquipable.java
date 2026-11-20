@@ -11,7 +11,12 @@ public class ItemEquipable extends Item {
     private int bonusDefensa;
 
     public ItemEquipable(String nombre, String descripcion, TipoObjeto tipo, int bonusAtaque, int bonusDefensa) {
-        super(nombre, descripcion);
+        this(nombre, descripcion, tipo, bonusAtaque, bonusDefensa, TipoRareza.COMUN);
+    }
+
+    public ItemEquipable(String nombre, String descripcion, TipoObjeto tipo, int bonusAtaque, int bonusDefensa,
+            TipoRareza rareza) {
+        super(nombre, descripcion, rareza);
         this.tipo = tipo;
         this.bonusAtaque = bonusAtaque;
         this.bonusDefensa = bonusDefensa;

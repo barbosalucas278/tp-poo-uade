@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -20,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import controller.BatallaController;
+import controller.EquipamientoController;
 import model.DTOs.MapaDTO;
 import view.componentes.BotonRPG;
 import view.componentes.PanelConFondo;
@@ -37,6 +39,7 @@ public class PantallaPreBatalla extends JFrame {
     private JLabel lblNivel;
     private PanelRecorrido panelRecorrido;
     private BotonRPG btnVolver;
+    private BotonRPG btnEquipamiento;
     private BotonRPG btnIniciarBatalla;
 
     public PantallaPreBatalla() {
@@ -109,9 +112,17 @@ public class PantallaPreBatalla extends JFrame {
         btnVolver.setPreferredSize(new Dimension(150, 45));
         panel.add(btnVolver, BorderLayout.WEST);
 
+        JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        acciones.setOpaque(false);
+
+        btnEquipamiento = new BotonRPG("EQUIPAMIENTO");
+        btnEquipamiento.setPreferredSize(new Dimension(180, 45));
+        acciones.add(btnEquipamiento);
+
         btnIniciarBatalla = new BotonRPG("INICIAR BATALLA");
         btnIniciarBatalla.setPreferredSize(new Dimension(220, 45));
-        panel.add(btnIniciarBatalla, BorderLayout.EAST);
+        acciones.add(btnIniciarBatalla);
+        panel.add(acciones, BorderLayout.EAST);
         return panel;
     }
 
@@ -121,6 +132,9 @@ public class PantallaPreBatalla extends JFrame {
             inicio.setVisible(true);
             this.dispose();
         });
+
+        btnEquipamiento.addActionListener(e ->
+                new PantallaEquipamiento(this, new EquipamientoController()).setVisible(true));
 
         btnIniciarBatalla.addActionListener(e -> {
             PantallaBatalla inicio = new PantallaBatalla();

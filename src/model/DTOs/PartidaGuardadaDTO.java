@@ -39,6 +39,7 @@ public class PartidaGuardadaDTO {
         public TipoObjeto tipo;
         public int bonusAtaque;
         public int bonusDefensa;
+        public TipoRareza rareza = TipoRareza.COMUN;
     }
 
     public static class ConsumibleGuardado {

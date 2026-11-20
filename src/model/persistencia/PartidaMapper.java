@@ -134,6 +134,6 @@ public class PartidaMapper {
     }
 
     private static ItemEquipable aItemEquipable(ItemGuardado i) {
-        return new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa);
+        return new ItemEquipable(i.nombre, i.descripcion, i.tipo, i.bonusAtaque, i.bonusDefensa, i.rareza);
     }
 }

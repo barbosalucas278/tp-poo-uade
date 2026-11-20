@@ -20,6 +20,16 @@ public class Inventario {
         return new ArrayList<>(items);
     }
 
+    public List<ItemEquipable> getEquipables() {
+        List<ItemEquipable> equipables = new ArrayList<>();
+        for (Item item : items) {
+            if (item instanceof ItemEquipable) {
+                equipables.add((ItemEquipable) item);
+            }
+        }
+        return equipables;
+    }
+
     public boolean agregarItem(Item item) {
         if (items.size() < capacidadMax) {
             items.add(item);

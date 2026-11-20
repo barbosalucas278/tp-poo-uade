@@ -502,7 +502,8 @@ public class InventarioCombateTest {
         verificar(!siguienteNivel.isCompletado(), "La confirmación anterior no debe completar otro nivel.");
         verificar(actor.getExperienciaActual() == 25 && aliado.getExperienciaActual() == 25,
                 "Cada personaje debe recibir la experiencia de la victoria una sola vez.");
-        verificar(controller.getCantidadItemsInventario() == 1, "El inventario debe recibir el botín una sola vez.");
+        verificar(controller.getCantidadItemsInventario() == 3,
+                "El inventario debe recibir el botín y el equipo inicial una sola vez.");
     }
 
     private static void factoryConservaRarezaYTipo() {

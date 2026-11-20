@@ -33,8 +33,8 @@ import model.objetos.TipoRareza;
  *
  * PARTIDA|nombre
  * PERSONAJE|tipo|nombre|rutaImagen|vida|recurso|ataque|defensa|velocidad|nivel|xp|xpSiguienteNivel
- * EQUIPADO|nombre|descripcion|tipo|bonusAtaque|bonusDefensa   (objeto equipado del último PERSONAJE leído)
- * ITEM|nombre|descripcion|tipo|bonusAtaque|bonusDefensa
+ * EQUIPADO|nombre|descripcion|tipo|bonusAtaque|bonusDefensa|rareza
+ * ITEM|nombre|descripcion|tipo|bonusAtaque|bonusDefensa|rareza
  * CONSUMIBLE|tipo|rareza
  * MAPA|numero|completado
  * NIVEL|numero|completado
@@ -85,14 +85,12 @@ public class GestorArchivos {
                     p.ataqueBase, p.defensaBase, p.velocidad, p.nivel, p.experienciaActual,
                     p.experienciaSiguienteNivel);
             for (ItemGuardado equipado : p.equipados) {
-                escribirLinea(writer, "EQUIPADO", equipado.nombre, equipado.descripcion, equipado.tipo,
-                        equipado.bonusAtaque, equipado.bonusDefensa);
+                escribirEquipable(writer, "EQUIPADO", equipado);
             }
         }
 
         for (ItemGuardado item : partida.inventario) {
-            escribirLinea(writer, "ITEM", item.nombre, item.descripcion, item.tipo, item.bonusAtaque,
-                    item.bonusDefensa);
+            escribirEquipable(writer, "ITEM", item);
         }
 
         for (ConsumibleGuardado consumible : partida.consumibles) {
@@ -147,23 +145,11 @@ public class GestorArchivos {
                     if (partida.party.isEmpty()) {
                         throw new IllegalArgumentException("EQUIPADO sin un PERSONAJE previo");
                     }
-                    ItemGuardado equipado = new ItemGuardado();
-                    equipado.nombre = campos[1];
-                    equipado.descripcion = campos[2];
-                    equipado.tipo = TipoObjeto.valueOf(campos[3]);
-                    equipado.bonusAtaque = Integer.parseInt(campos[4]);
-                    equipado.bonusDefensa = Integer.parseInt(campos[5]);
-                    partida.party.get(partida.party.size() - 1).equipados.add(equipado);
+                    partida.party.get(partida.party.size() - 1).equipados.add(leerEquipable(campos));
                     break;
 
                 case "ITEM":
-                    ItemGuardado item = new ItemGuardado();
-                    item.nombre = campos[1];
-                    item.descripcion = campos[2];
-                    item.tipo = TipoObjeto.valueOf(campos[3]);
-                    item.bonusAtaque = Integer.parseInt(campos[4]);
-                    item.bonusDefensa = Integer.parseInt(campos[5]);
-                    partida.inventario.add(item);
+                    partida.inventario.add(leerEquipable(campos));
                     break;
 
                 case "CONSUMIBLE":
@@ -211,6 +197,25 @@ public class GestorArchivos {
             throw new IllegalArgumentException("Archivo de partida incompleto");
         }
         return partida;
+    }
+
+    private static ItemGuardado leerEquipable(String[] campos) {
+        ItemGuardado item = new ItemGuardado();
+        item.nombre = campos[1];
+        item.descripcion = campos[2];
+        item.tipo = TipoObjeto.valueOf(campos[3]);
+        item.bonusAtaque = Integer.parseInt(campos[4]);
+        item.bonusDefensa = Integer.parseInt(campos[5]);
+        // Los guardados anteriores al equipamiento por rareza terminan en el bonus de defensa.
+        if (campos.length > 6 && !campos[6].isEmpty()) {
+            item.rareza = TipoRareza.valueOf(campos[6]);
+        }
+        return item;
+    }
+
+    private static void escribirEquipable(BufferedWriter writer, String registro, ItemGuardado item) throws IOException {
+        escribirLinea(writer, registro, item.nombre, item.descripcion, item.tipo,
+                item.bonusAtaque, item.bonusDefensa, item.rareza);
     }
 
     private static void escribirLinea(BufferedWriter writer, Object... campos) throws IOException {

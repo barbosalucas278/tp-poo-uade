@@ -35,6 +35,7 @@ class RegistroItemsGuardados implements RegistroItems {
         item.tipo = equipable.getTipo();
         item.bonusAtaque = equipable.getBonusAtaque();
         item.bonusDefensa = equipable.getBonusDefensa();
+        item.rareza = equipable.getRareza();
         return item;
     }
 }

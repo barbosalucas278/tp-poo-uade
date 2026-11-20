@@ -17,9 +17,10 @@ import model.persistencia.PartidaMapper;
 
 public class GestorPartida {
 
+    private static final int MAPA_INICIAL = 1;
+    private static final int NIVEL_INICIAL = 1;
     private static GestorPartida instance;
-    private Partida partidaActual;
-    private final int NIVEL_INICIAL = 1;
+    public Partida partidaActual;
 
     private GestorPartida() {
     }
@@ -37,7 +38,7 @@ public class GestorPartida {
 
     public Partida nuevaPartida(String nombrePartida, List<Personaje> party) {
         Partida.validarCantidadMinimaPersonajes(party);
-        Partida nuevaPartida = new Partida(nombrePartida, party, generarNuevoMapa(NIVEL_INICIAL));
+        Partida nuevaPartida = new Partida(nombrePartida, party, generarNuevoMapa(MAPA_INICIAL));
         this.partidaActual = nuevaPartida;
         return this.partidaActual;
     }
@@ -52,7 +53,8 @@ public class GestorPartida {
 
         List<Enemigo> enemigos = nivel.getEnemigos();
         int experienciaGanada = CalculadoraDeExperiencia.CalcularExperiencia(enemigos);
-        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(enemigos);
+        boolean primeraVictoria = mapa.getNumeroMapa() == MAPA_INICIAL && nivel.getNumeroNivel() == NIVEL_INICIAL;
+        List<Item> itemsGanados = GeneradorDeBotin.SortearBotin(enemigos, primeraVictoria);
         otorgarExperiencia(experienciaGanada);
         partidaActual.setInventarioGlobal(itemsGanados);
         nivel.setCompletado(true);
@@ -83,7 +85,7 @@ public class GestorPartida {
 
         int cantidadNiveles = random.nextInt(8) + 3;
 
-        for (int numeroNivel = 1; numeroNivel <= cantidadNiveles; numeroNivel++) {
+        for (int numeroNivel = NIVEL_INICIAL; numeroNivel <= cantidadNiveles; numeroNivel++) {
             List<Enemigo> enemigos = new ArrayList<>();
 
             int nivelEnemigos = numeroMapa + numeroNivel - 1;

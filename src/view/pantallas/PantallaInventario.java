@@ -124,7 +124,7 @@ public class PantallaInventario extends JDialog {
                     boolean seleccionado, boolean foco) {
                 JLabel etiqueta = (JLabel) super.getListCellRendererComponent(lista, valor, indice, seleccionado, foco);
                 ItemInventarioDTO item = (ItemInventarioDTO) valor;
-                etiqueta.setText(item.getNombre() + " · " + nombreRareza(item.getRareza()));
+                etiqueta.setText(item.getNombre() + " · " + RarezaVisual.nombre(item.getRareza()));
                 etiqueta.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
                 etiqueta.setBackground(seleccionado ? new Color(65, 49, 25) : FONDO);
                 etiqueta.setForeground(item.isConsumible() ? colorRareza(item.getRareza()) : SECUNDARIO);
@@ -208,7 +208,7 @@ public class PantallaInventario extends JDialog {
         }
         lblNombreItem.setText(item.getNombre());
         lblNombreItem.setToolTipText(item.getNombre());
-        lblRareza.setText(nombreRareza(item.getRareza()) + " · " + (item.isConsumible() ? "Consumible" : "Equipable"));
+        lblRareza.setText(RarezaVisual.nombre(item.getRareza()) + " · " + (item.isConsumible() ? "Consumible" : "Equipable"));
         lblRareza.setForeground(colorRareza(item.getRareza()));
         descripcion.setText(item.getDescripcion());
         descripcion.setCaretPosition(0);
@@ -259,20 +259,6 @@ public class PantallaInventario extends JDialog {
         texto.setFont(new Font("Georgia", Font.PLAIN, 14));
         texto.setForeground(TEXTO);
         return texto;
-    }
-
-    private static String nombreRareza(TipoRareza rareza) {
-        if (rareza == null) {
-            return "Sin rareza";
-        }
-        switch (rareza) {
-            case RARO:
-                return "Raro";
-            case EPICO:
-                return "Épico";
-            default:
-                return "Común";
-        }
     }
 
     private static Color colorRareza(TipoRareza rareza) {
